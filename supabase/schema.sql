@@ -1,5 +1,5 @@
 -- BF2 Stat Log schema
--- Run this once in the Supabase SQL editor for your "Marvel-Fantasy-Battle" project.
+-- Run this once in the Supabase SQL editor for the "bf2-stat-log" project.
 
 create table if not exists public.bf2_maps (
   id bigint generated always as identity primary key,

@@ -50,7 +50,7 @@ export default function Dashboard({ maps, logs }) {
         <div>
           <h1>BF2 Map Progression</h1>
           <p className="subtitle">
-            Tracking weekly co-op games across every map and server size.
+            Tracking battle progression across every map and server size.
           </p>
         </div>
         <Link className="button-link" href="/login">
