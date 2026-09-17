@@ -138,6 +138,15 @@ a {
   color: var(--loss);
 }
 
+.badge-na {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+}
+
+.cell-na {
+  opacity: 0.5;
+}
+
 .cell-detail {
   display: flex;
   flex-direction: column;
@@ -255,6 +264,43 @@ a {
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
+  gap: 12px;
+}
+
+.map-row {
+  flex-wrap: wrap;
+}
+
+.map-row-name {
+  flex: 1;
+  min-width: 140px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
+.checkbox-group legend {
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .link-button {

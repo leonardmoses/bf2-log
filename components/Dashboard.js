@@ -2,9 +2,17 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex } from '@/lib/stats';
+import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/lib/stats';
 
-function StatusCell({ summary }) {
+function StatusCell({ summary, available }) {
+  if (!available) {
+    return (
+      <td className="cell cell-na">
+        <span className="badge badge-na">N/A</span>
+      </td>
+    );
+  }
+
   if (!summary || summary.count === 0) {
     return (
       <td className="cell cell-empty">
@@ -35,12 +43,17 @@ export default function Dashboard({ maps, logs }) {
   const [playerCount, setPlayerCount] = useState(PLAYER_COUNTS[0]);
   const statsIndex = useMemo(() => buildStatsIndex(logs), [logs]);
 
-  const totalForTab = maps.length * MAP_SIZES.length;
+  const totalForTab = maps.reduce(
+    (sum, map) => sum + MAP_SIZES.filter((size) => mapSupportsSize(map, size)).length,
+    0
+  );
   const completedForTab = maps.reduce((sum, map) => {
     const forPlayerCount = statsIndex[map.id]?.[playerCount] ?? {};
     return (
       sum +
-      MAP_SIZES.filter((size) => (forPlayerCount[size]?.count ?? 0) > 0).length
+      MAP_SIZES.filter(
+        (size) => mapSupportsSize(map, size) && (forPlayerCount[size]?.count ?? 0) > 0
+      ).length
     );
   }, 0);
 
@@ -93,6 +106,7 @@ export default function Dashboard({ maps, logs }) {
                 {MAP_SIZES.map((size) => (
                   <StatusCell
                     key={size}
+                    available={mapSupportsSize(map, size)}
                     summary={statsIndex[map.id]?.[playerCount]?.[size]}
                   />
                 ))}

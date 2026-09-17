@@ -1,12 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { PLAYER_COUNTS, MAP_SIZES, defaultBotCount } from '@/lib/stats';
+import {
+  PLAYER_COUNTS,
+  MAP_SIZES,
+  defaultBotCount,
+  supportedSizesForMap,
+} from '@/lib/stats';
 import {
   saveGameLog,
   deleteGameLog,
   addMap,
   deleteMap,
+  updateMapSizes,
   signOut,
 } from '@/app/admin/actions';
 
@@ -32,9 +38,19 @@ export default function AdminApp({ userEmail, maps, logs }) {
       if (field === 'player_count') {
         next.bot_count = defaultBotCount(value);
       }
+      if (field === 'map_id') {
+        const selected = maps.find((m) => String(m.id) === String(value));
+        const sizes = selected ? supportedSizesForMap(selected) : MAP_SIZES;
+        if (!sizes.includes(Number(next.map_size))) {
+          next.map_size = sizes[0] ?? '';
+        }
+      }
       return next;
     });
   }
+
+  const selectedMap = maps.find((m) => String(m.id) === String(form.map_id));
+  const availableSizes = selectedMap ? supportedSizesForMap(selectedMap) : MAP_SIZES;
 
   function startEdit(log) {
     setForm({
@@ -120,8 +136,14 @@ export default function AdminApp({ userEmail, maps, logs }) {
               name="map_size"
               value={form.map_size}
               onChange={(e) => updateField('map_size', e.target.value)}
+              required
             >
-              {MAP_SIZES.map((size) => (
+              {availableSizes.length === 0 && (
+                <option value="" disabled>
+                  No sizes available
+                </option>
+              )}
+              {availableSizes.map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -234,6 +256,15 @@ export default function AdminApp({ userEmail, maps, logs }) {
                 required
               />
             </label>
+            <fieldset className="checkbox-group">
+              <legend>Available sizes</legend>
+              {MAP_SIZES.map((size) => (
+                <label key={size} className="checkbox-field">
+                  <input type="checkbox" name={`supports_${size}`} defaultChecked />
+                  {size}
+                </label>
+              ))}
+            </fieldset>
             <button className="button" type="submit">
               Add
             </button>
@@ -241,8 +272,24 @@ export default function AdminApp({ userEmail, maps, logs }) {
         )}
         <ul className="map-list">
           {maps.map((map) => (
-            <li key={map.id}>
-              <span>{map.name}</span>
+            <li key={map.id} className="map-row">
+              <span className="map-row-name">{map.name}</span>
+              <form className="checkbox-group" action={updateMapSizes}>
+                <input type="hidden" name="id" value={map.id} />
+                {MAP_SIZES.map((size) => (
+                  <label key={size} className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      name={`supports_${size}`}
+                      defaultChecked={map[`supports_${size}`] !== false}
+                    />
+                    {size}
+                  </label>
+                ))}
+                <button className="link-button" type="submit">
+                  Save
+                </button>
+              </form>
               <form action={deleteMap}>
                 <input type="hidden" name="id" value={map.id} />
                 <button className="link-button link-danger" type="submit">
