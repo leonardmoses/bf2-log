@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import SiteHeader from '@/components/SiteHeader';
 import Dashboard from '@/components/Dashboard';
 
 export const revalidate = 0;
@@ -22,14 +21,11 @@ export default async function HomePage() {
 
   if (mapsError || logsError) {
     return (
-      <>
-        <SiteHeader />
-        <main className="page page-section">
-          <p className="error">
-            Could not load data: {mapsError?.message || logsError?.message}
-          </p>
-        </main>
-      </>
+      <main className="page page-section">
+        <p className="error">
+          Could not load data: {mapsError?.message || logsError?.message}
+        </p>
+      </main>
     );
   }
 

@@ -92,6 +92,10 @@ h2 {
   gap: 16px;
 }
 
+.brand:hover {
+  text-decoration: none;
+}
+
 .brand-mark {
   display: flex;
   align-items: baseline;
@@ -230,8 +234,28 @@ h2 {
   padding: 0 24px;
 }
 
-.page-narrow {
+.narrow {
   max-width: 480px;
+  margin: 0 auto;
+}
+
+.page-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 0 16px;
+}
+
+.page-actions .nav-link {
+  margin-bottom: 0;
+}
+
+.page-actions-note {
+  margin-right: auto;
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .page-section {
@@ -252,12 +276,45 @@ h2 {
 
 /* ---------- Tabs & glass panel ---------- */
 
+.tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .tabs {
   display: flex;
   align-items: stretch;
   gap: 3px;
   padding: 14px 0 0;
   flex-wrap: wrap;
+}
+
+.nav-link {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3d4145;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(120, 116, 108, 0.5);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: #fff;
+  text-decoration: none;
+  background: linear-gradient(#8f1620, #66101a);
+  border-color: #a4141f;
 }
 
 .tab {
@@ -732,12 +789,6 @@ h2 {
   padding: 16px 20px 20px;
 }
 
-.footer-link {
-  margin: 0;
-  padding: 0 20px 16px;
-  font-size: 14px;
-}
-
 /* ---------- Badges ---------- */
 
 .badge {
@@ -983,8 +1034,19 @@ h2 {
     font-size: 28px;
   }
 
-  .tabs {
+  .tabs-row {
+    justify-content: flex-end;
+  }
+
+  .tabs-row .tabs {
     flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .tabs-row .nav-link {
+    order: -1;
+    margin-bottom: 0;
+    margin-top: 12px;
   }
 
   .tab {

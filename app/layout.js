@@ -1,5 +1,7 @@
 import { Oswald, Barlow_Semi_Condensed, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import SiteHeader from "@/components/SiteHeader";
+import { createClient } from "@/lib/supabase/server";
 
 const oswald = Oswald({
   variable: "--font-oswald",
@@ -24,13 +26,28 @@ export const metadata = {
   description: "Battlefield 2 weekly game night map progression tracker",
 };
 
-export default function RootLayout({ children }) {
+async function isSignedIn() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return Boolean(user);
+  } catch {
+    return false;
+  }
+}
+
+export default async function RootLayout({ children }) {
+  const signedIn = await isSignedIn();
+
   return (
     <html
       lang="en"
       className={`${oswald.variable} ${barlow.variable} ${plexMono.variable}`}
     >
       <body>
+        <SiteHeader signedIn={signedIn} />
         {children}
         <footer className="site-footer">
           Battlefield 2 &mdash; DICE, 2005 &middot; coop map log

@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import SiteHeader from '@/components/SiteHeader';
 
 export const revalidate = 0;
 
@@ -13,30 +12,27 @@ export default async function HistoryPage() {
     .order('played_at', { ascending: false })
     .order('created_at', { ascending: false });
 
-  const header = (
-    <SiteHeader title="Session History" subtitle="Every logged game, most recent first.">
-      <Link className="button-link" href="/">
+  const actions = (
+    <div className="page-actions">
+      <Link className="nav-link" href="/">
         &larr; Back to progression
       </Link>
-    </SiteHeader>
+    </div>
   );
 
   if (error) {
     return (
-      <>
-        {header}
-        <main className="page page-section">
-          <p className="error">Could not load history: {error.message}</p>
-        </main>
-      </>
+      <main className="page">
+        {actions}
+        <p className="error">Could not load history: {error.message}</p>
+      </main>
     );
   }
 
   return (
-    <>
-      {header}
-      <main className="page page-section">
-        <div className="table-wrap">
+    <main className="page">
+      {actions}
+      <div className="table-wrap">
           <table className="stats-table">
             <thead>
               <tr>
@@ -81,7 +77,6 @@ export default async function HistoryPage() {
             </tbody>
           </table>
         </div>
-      </main>
-    </>
+    </main>
   );
 }

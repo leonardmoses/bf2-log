@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import SiteHeader from '@/components/SiteHeader';
 import AdminPlayers from '@/components/AdminPlayers';
 import {
   PLAYER_COUNTS,
@@ -75,19 +74,19 @@ export default function AdminApp({ userEmail, maps, logs, players, playersMissin
   }
 
   return (
-    <>
-      <SiteHeader title="Admin" subtitle={`Signed in as ${userEmail}`}>
-        <Link className="button-link" href="/">
-          View site
+    <main className="page">
+      <div className="page-actions">
+        <span className="page-actions-note">Signed in as {userEmail}</span>
+        <Link className="nav-link" href="/">
+          &larr; Back to progression
         </Link>
         <form action={signOut}>
-          <button className="button" type="submit">
+          <button className="nav-link" type="submit">
             Sign out
           </button>
         </form>
-      </SiteHeader>
+      </div>
 
-    <main className="page page-section">
       <section className="panel">
         <h2>{form.id ? 'Edit session' : 'Log a new session'}</h2>
         <form
@@ -368,6 +367,5 @@ export default function AdminApp({ userEmail, maps, logs, players, playersMissin
         </div>
       </section>
     </main>
-    </>
   );
 }

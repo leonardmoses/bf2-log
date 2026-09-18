@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import SiteHeader from '@/components/SiteHeader';
 import RankBadge from '@/components/RankBadge';
 import { rankForPlayer } from '@/lib/ranks';
 import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/lib/stats';
@@ -150,13 +149,8 @@ export default function Dashboard({ maps, logs, players }) {
 
   return (
     <>
-      <SiteHeader>
-        <Link className="button-link" href="/login">
-          Admin login
-        </Link>
-      </SiteHeader>
-
       <main className="page">
+        <div className="tabs-row">
         <nav className="tabs" aria-label="Player count">
           {PLAYER_COUNTS.map((count) => (
             <button
@@ -169,6 +163,10 @@ export default function Dashboard({ maps, logs, players }) {
             </button>
           ))}
         </nav>
+        <Link className="nav-link" href="/history">
+          View full session history &rarr;
+        </Link>
+        </div>
 
         <div className="glass">
           <div className="summary-grid">
@@ -245,10 +243,6 @@ export default function Dashboard({ maps, logs, players }) {
               <span>N/A &mdash; size unsupported on this map</span>
             </div>
           </div>
-
-          <p className="footer-link">
-            <Link href="/history">View full session history &rarr;</Link>
-          </p>
         </div>
       </main>
     </>
