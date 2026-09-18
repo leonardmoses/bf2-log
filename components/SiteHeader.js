@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { signOut } from '@/app/admin/actions';
 
-export default function SiteHeader({ signedIn = false }) {
+export default function SiteHeader({ signedIn = false, email = '', isAdmin = false }) {
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -18,9 +19,26 @@ export default function SiteHeader({ signedIn = false }) {
           </div>
         </Link>
         <div className="header-actions">
-          <Link className="button-link" href={signedIn ? '/admin' : '/login'}>
-            {signedIn ? 'Admin' : 'Admin login'}
-          </Link>
+          {signedIn ? (
+            <>
+              {isAdmin ? (
+                <Link className="button-link header-button header-user" href="/admin" title="Open admin">
+                  {email || 'Admin'}
+                </Link>
+              ) : (
+                <span className="header-user-label">{email}</span>
+              )}
+              <form action={signOut}>
+                <button className="button-link header-button" type="submit">
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link className="button-link header-button" href="/login">
+              Admin login
+            </Link>
+          )}
         </div>
       </div>
     </header>

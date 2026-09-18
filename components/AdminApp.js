@@ -15,7 +15,6 @@ import {
   addMap,
   deleteMap,
   updateMapSizes,
-  signOut,
 } from '@/app/admin/actions';
 
 const emptyForm = {
@@ -76,15 +75,9 @@ export default function AdminApp({ userEmail, maps, logs, players, playersMissin
   return (
     <main className="page">
       <div className="page-actions">
-        <span className="page-actions-note">Signed in as {userEmail}</span>
         <Link className="nav-link" href="/">
           &larr; Back to progression
         </Link>
-        <form action={signOut}>
-          <button className="nav-link" type="submit">
-            Sign out
-          </button>
-        </form>
       </div>
 
       <section className="panel">

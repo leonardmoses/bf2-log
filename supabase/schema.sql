@@ -11,7 +11,7 @@ create table if not exists public.bf2_maps (
 create table if not exists public.bf2_game_logs (
   id uuid primary key default gen_random_uuid(),
   map_id bigint not null references public.bf2_maps(id) on delete cascade,
-  player_count integer not null check (player_count between 3 and 6),
+  player_count integer not null check (player_count between 3 and 8),
   map_size integer not null check (map_size in (16, 32, 64)),
   bot_count integer not null check (bot_count >= 0),
   result text not null check (result in ('win', 'loss')),

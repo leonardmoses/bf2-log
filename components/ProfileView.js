@@ -3,9 +3,9 @@ import RankBadge from '@/components/RankBadge';
 import ProfileAwards from '@/components/ProfileAwards';
 import { nextRank, rankForPlayer } from '@/lib/ranks';
 import {
-  KIT_NAMES,
-  VEHICLE_NAMES,
-  WEAPON_NAMES,
+  kitName,
+  vehicleName,
+  weaponName,
   armyName,
   flagEmoji,
   formatDate,
@@ -109,9 +109,9 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
 
   const favs = derived
     ? [
-        derived.favKit >= 0 && ['Kit', KIT_NAMES[derived.favKit]],
-        derived.favVehicle >= 0 && ['Vehicle', VEHICLE_NAMES[derived.favVehicle]],
-        derived.favWeapon >= 0 && ['Weapon', WEAPON_NAMES[derived.favWeapon]],
+        derived.favKit >= 0 && ['Kit', kitName(derived.favKit)],
+        derived.favVehicle >= 0 && ['Vehicle', vehicleName(derived.favVehicle)],
+        derived.favWeapon >= 0 && ['Weapon', weaponName(derived.favWeapon)],
         derived.favArmy >= 0 && ['Army', armyName(derived.favArmy)],
       ].filter(Boolean)
     : [];
@@ -290,14 +290,14 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
               title="Kits"
               columns={['Kit', 'Time', 'Kills', 'Deaths', 'K/D']}
               rows={stats.kits.map((k, i) => [
-                KIT_NAMES[i], formatDuration(k[0]), formatNumber(k[1]), formatNumber(k[2]), ratio(k[1], k[2]),
+                kitName(i), formatDuration(k[0]), formatNumber(k[1]), formatNumber(k[2]), ratio(k[1], k[2]),
               ])}
             />
             <DataTable
               title="Vehicles"
               columns={['Vehicle', 'Time', 'Kills', 'Road kills', 'Deaths', 'K/D']}
               rows={stats.vehicles.map((v, i) => [
-                VEHICLE_NAMES[i], formatDuration(v[0]), formatNumber(v[1]), formatNumber(v[3]),
+                vehicleName(i), formatDuration(v[0]), formatNumber(v[1]), formatNumber(v[3]),
                 formatNumber(v[2]), ratio(v[1], v[2]),
               ])}
             />
@@ -305,7 +305,7 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
               title="Weapons"
               columns={['Weapon', 'Time', 'Kills', 'Deaths', 'K/D', 'Accuracy']}
               rows={stats.weapons.map((w, i) => [
-                WEAPON_NAMES[i], formatDuration(w[0]), formatNumber(w[1]), formatNumber(w[2]),
+                weaponName(i), formatDuration(w[0]), formatNumber(w[1]), formatNumber(w[2]),
                 ratio(w[1], w[2]), w[3] > 0 ? `${((w[4] / w[3]) * 100).toFixed(2)}%` : '—',
               ])}
             />

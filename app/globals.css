@@ -186,6 +186,31 @@ h2 {
   border-color: #a4141f;
 }
 
+.header-button {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 5px 12px;
+}
+
+.header-user {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.header-user-label {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #9ba0a5;
+}
+
 .button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -786,8 +811,88 @@ h2 {
   letter-spacing: 0.02em;
 }
 
+.legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 22px;
+  flex-wrap: wrap;
+}
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.export-button {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #3d4145;
+  padding: 5px 12px;
+  border: 1px solid rgba(116, 118, 122, 0.5);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.export-button:hover {
+  color: #fff;
+  background: linear-gradient(#8f1620, #66101a);
+  border-color: #a4141f;
+}
+
 .table-section {
   padding: 16px 20px 20px;
+}
+
+/* ---------- Map filters ---------- */
+
+.map-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.map-filters input,
+.map-filters select {
+  height: 36px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid rgba(116, 118, 122, 0.45);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 14.5px;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+.map-filters .map-filter-search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.map-filters input:focus,
+.map-filters select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(143, 22, 32, 0.16);
+}
+
+.map-filter-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.map-empty {
+  padding: 22px 14px;
+  text-align: center;
+  color: var(--muted);
 }
 
 /* ---------- Badges ---------- */
@@ -1029,6 +1134,10 @@ h2 {
 
   .site-header-inner {
     padding: 14px 14px 12px;
+  }
+
+  .header-user {
+    max-width: 150px;
   }
 
   .summary-value {
@@ -1990,4 +2099,10 @@ a.standing-name:hover {
   font-style: italic;
   color: var(--muted);
   white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .map-filters .map-filter-search {
+    flex-basis: 100%;
+  }
 }

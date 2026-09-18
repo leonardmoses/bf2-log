@@ -3,11 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdminClient } from '@/lib/admin';
 
 const SUPPORTS_FIELD = { 16: 'supports_16', 32: 'supports_32', 64: 'supports_64' };
 
 export async function saveGameLog(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
 
   const id = formData.get('id');
   const mapId = Number(formData.get('map_id'));
@@ -52,7 +53,7 @@ export async function saveGameLog(formData) {
 }
 
 export async function deleteGameLog(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const id = formData.get('id');
 
   const { error } = await supabase.from('bf2_game_logs').delete().eq('id', id);
@@ -66,7 +67,7 @@ export async function deleteGameLog(formData) {
 }
 
 export async function addMap(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const name = formData.get('name');
   const sortOrder = Number(formData.get('sort_order'));
 
@@ -87,7 +88,7 @@ export async function addMap(formData) {
 }
 
 export async function updateMapSizes(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const id = formData.get('id');
 
   const { error } = await supabase
@@ -108,7 +109,7 @@ export async function updateMapSizes(formData) {
 }
 
 export async function deleteMap(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const id = formData.get('id');
 
   const { error } = await supabase.from('bf2_maps').delete().eq('id', id);
@@ -121,7 +122,7 @@ export async function deleteMap(formData) {
 }
 
 export async function savePlayer(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
 
   const id = formData.get('id');
   const name = String(formData.get('name') ?? '').trim();
@@ -150,7 +151,7 @@ export async function savePlayer(formData) {
 }
 
 export async function deletePlayer(formData) {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const id = formData.get('id');
 
   const { error } = await supabase.from('bf2_players').delete().eq('id', id);

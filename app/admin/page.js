@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { isAdminEmail } from '@/lib/admin';
 import AdminApp from '@/components/AdminApp';
 
 export const revalidate = 0;
@@ -13,6 +14,10 @@ export default async function AdminPage() {
 
   if (!user) {
     redirect('/login');
+  }
+
+  if (!isAdminEmail(user.email)) {
+    redirect('/');
   }
 
   const [{ data: maps }, { data: logs }, { data: players, error: playersError }] =

@@ -6,6 +6,7 @@ import RankBadge from '@/components/RankBadge';
 import ProfileModal from '@/components/ProfileModal';
 import { rankForPlayer } from '@/lib/ranks';
 import { playerHref } from '@/lib/profile';
+import { exportCsv, exportExcel } from '@/lib/exportStats';
 import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/lib/stats';
 
 const LEADERBOARD_SIZE = 9; // three columns of three
@@ -201,6 +202,32 @@ export default function Dashboard({ maps, logs, players }) {
     ? rated.reduce((sum, log) => sum + log.difficulty, 0) / rated.length
     : null;
 
+  const [mapQuery, setMapQuery] = useState('');
+  const [sizeFilter, setSizeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const filtersActive = mapQuery.trim() !== '' || sizeFilter !== 'all' || statusFilter !== 'all';
+  const visibleSizes = sizeFilter === 'all' ? MAP_SIZES : [Number(sizeFilter)];
+
+  const visibleMaps = useMemo(() => {
+    const q = mapQuery.trim().toLowerCase();
+    return maps.filter((map) => {
+      if (q && !map.name.toLowerCase().includes(q)) return false;
+      const sizes = visibleSizes.filter((size) => mapSupportsSize(map, size));
+      if (sizes.length === 0) return false;
+      if (statusFilter === 'all') return true;
+      const cells = sizes.map((size) => statsIndex[map.id]?.[playerCount]?.[size]);
+      if (statusFilter === 'played') return cells.some((c) => c?.count > 0);
+      if (statusFilter === 'unplayed') return cells.some((c) => !c || c.count === 0);
+      return cells.some((c) => c?.losses > 0); // 'lost'
+    });
+  }, [maps, mapQuery, visibleSizes, statusFilter, statsIndex, playerCount]);
+
+  function clearFilters() {
+    setMapQuery('');
+    setSizeFilter('all');
+    setStatusFilter('all');
+  }
+
   const pct = totalCombos ? (playedCombos / totalCombos) * 100 : 0;
 
   const summary = [
@@ -280,22 +307,53 @@ export default function Dashboard({ maps, logs, players }) {
           <Standings players={players} onOpen={setSelectedPlayer} />
 
           <div className="table-section">
-            {tabLogs.length > 0 ? (
+            <>
+              <div className="map-filters">
+                <input
+                  type="search"
+                  className="map-filter-search"
+                  value={mapQuery}
+                  onChange={(e) => setMapQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Escape' && setMapQuery('')}
+                  placeholder={`Search ${maps.length} maps`}
+                  aria-label="Search maps"
+                />
+                <select value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)} aria-label="Map size">
+                  <option value="all">All sizes</option>
+                  {MAP_SIZES.map((size) => (
+                    <option key={size} value={size}>Size {size}</option>
+                  ))}
+                </select>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Status">
+                  <option value="all">Any status</option>
+                  <option value="played">Played</option>
+                  <option value="unplayed">Not yet played</option>
+                  <option value="lost">Lost at least once</option>
+                </select>
+                {filtersActive && (
+                  <button className="link-button" type="button" onClick={clearFilters}>
+                    Clear
+                  </button>
+                )}
+                <span className="map-filter-count">
+                  {filtersActive ? `${visibleMaps.length} of ${maps.length} maps` : ''}
+                </span>
+              </div>
               <div className="table-wrap">
                 <table className="stats-table map-table">
                   <thead>
                     <tr>
                       <th>Map</th>
-                      {MAP_SIZES.map((size) => (
+                      {visibleSizes.map((size) => (
                         <th key={size}>Size {size}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {maps.map((map) => (
+                    {visibleMaps.map((map) => (
                       <tr key={map.id}>
                         <td className="map-name">{map.name}</td>
-                        {MAP_SIZES.map((size) => (
+                        {visibleSizes.map((size) => (
                           <SizeCell
                             key={size}
                             available={mapSupportsSize(map, size)}
@@ -304,24 +362,33 @@ export default function Dashboard({ maps, logs, players }) {
                         ))}
                       </tr>
                     ))}
+                    {visibleMaps.length === 0 && (
+                      <tr>
+                        <td className="map-empty" colSpan={visibleSizes.length + 1}>
+                          No maps match these filters.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-title">No rounds logged</div>
-                <div className="empty-note">
-                  Nothing recorded at {playerCount} players yet. Rounds appear here as soon as
-                  they are logged.
-                </div>
-              </div>
-            )}
+            </>
 
+            <div className="legend-row">
             <div className="legend">
               <span>W / L &mdash; rounds won and lost</span>
               <span>DIFF &mdash; bot difficulty, 1 to 5</span>
               <span>&mdash; not yet played</span>
               <span>N/A &mdash; size unsupported on this map</span>
+            </div>
+            <div className="export-actions">
+              <button className="export-button" type="button" onClick={() => exportExcel(maps, statsIndex)}>
+                Export to Excel
+              </button>
+              <button className="export-button" type="button" onClick={() => exportCsv(maps, statsIndex)}>
+                Export to CSV
+              </button>
+            </div>
             </div>
           </div>
         </div>
