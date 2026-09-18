@@ -82,6 +82,7 @@ function StandingRow({ player, position, onOpen }) {
 
 function Standings({ players, onOpen }) {
   const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(true);
 
   const ranked = useMemo(() => [...players].sort((a, b) => b.score - a.score), [players]);
   const positions = useMemo(() => new Map(ranked.map((p, i) => [p.id, i + 1])), [ranked]);
@@ -107,14 +108,26 @@ function Standings({ players, onOpen }) {
   }
 
   return (
+    <div className="glass standings-panel">
     <div className="section-block">
       <div className="standings">
-        <div className="bar-header">
-          <span className="bar-header-title">Player Standings</span>
+        <button
+          type="button"
+          className="bar-header bar-header-toggle"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className="bar-header-title">
+            <span className={`toggle-chevron ${open ? 'toggle-chevron-open' : ''}`} aria-hidden="true">&#9656;</span>
+            Player Standings
+          </span>
           <span className="bar-header-note">
             {searching ? `${matches.length} of ${ranked.length} players` : 'Score, all rounds'}
           </span>
-        </div>
+        </button>
+
+        {open && (
+        <>
 
         <div className="standings-controls">
           <div className="standings-control standings-search">
@@ -164,7 +177,10 @@ function Standings({ players, onOpen }) {
             Showing the top {LEADERBOARD_SIZE} of {matches.length} matches &mdash; keep typing to narrow it down.
           </div>
         )}
+        </>
+        )}
       </div>
+    </div>
     </div>
   );
 }
@@ -258,6 +274,8 @@ export default function Dashboard({ maps, logs, players }) {
   return (
     <>
       <main className="page">
+        <Standings players={players} onOpen={setSelectedPlayer} />
+
         <div className="tabs-row">
         <nav className="tabs" aria-label="Player count">
           {PLAYER_COUNTS.map((count) => (
@@ -303,8 +321,6 @@ export default function Dashboard({ maps, logs, players }) {
               <div className="progress-fill" style={{ width: `${Math.max(pct, 0.6).toFixed(1)}%` }} />
             </div>
           </div>
-
-          <Standings players={players} onOpen={setSelectedPlayer} />
 
           <div className="table-section">
             <>
