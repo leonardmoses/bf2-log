@@ -59,7 +59,7 @@ export default function LoginForm() {
       <button className="button" type="submit" disabled={loading}>
         {loading ? 'Signing in…' : 'Sign in'}
       </button>
-      <p className="footer-link">
+      <p className="form-note">
         Need an admin account? <Link href="/signup">Sign up</Link>
       </p>
     </form>

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import SiteHeader from '@/components/SiteHeader';
+import AdminPlayers from '@/components/AdminPlayers';
 import {
   PLAYER_COUNTS,
   MAP_SIZES,
@@ -28,7 +31,7 @@ const emptyForm = {
   notes: '',
 };
 
-export default function AdminApp({ userEmail, maps, logs }) {
+export default function AdminApp({ userEmail, maps, logs, players, playersMissing }) {
   const [form, setForm] = useState(emptyForm);
   const [showMapForm, setShowMapForm] = useState(false);
 
@@ -72,19 +75,19 @@ export default function AdminApp({ userEmail, maps, logs }) {
   }
 
   return (
-    <main className="page">
-      <header className="page-header">
-        <div>
-          <h1>Admin</h1>
-          <p className="subtitle">Signed in as {userEmail}</p>
-        </div>
+    <>
+      <SiteHeader title="Admin" subtitle={`Signed in as ${userEmail}`}>
+        <Link className="button-link" href="/">
+          View site
+        </Link>
         <form action={signOut}>
-          <button className="button button-secondary" type="submit">
+          <button className="button" type="submit">
             Sign out
           </button>
         </form>
-      </header>
+      </SiteHeader>
 
+    <main className="page page-section">
       <section className="panel">
         <h2>{form.id ? 'Edit session' : 'Log a new session'}</h2>
         <form
@@ -223,6 +226,8 @@ export default function AdminApp({ userEmail, maps, logs }) {
           </div>
         </form>
       </section>
+
+      <AdminPlayers players={players} playersMissing={playersMissing} />
 
       <section className="panel">
         <div className="panel-header">
@@ -363,5 +368,6 @@ export default function AdminApp({ userEmail, maps, logs }) {
         </div>
       </section>
     </main>
+    </>
   );
 }

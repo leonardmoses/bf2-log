@@ -120,6 +120,48 @@ export async function deleteMap(formData) {
   revalidatePath('/admin');
 }
 
+export async function savePlayer(formData) {
+  const supabase = await createClient();
+
+  const id = formData.get('id');
+  const name = String(formData.get('name') ?? '').trim();
+  const overrideRaw = formData.get('rank_override');
+
+  if (!name) {
+    throw new Error('Player name is required.');
+  }
+
+  const payload = {
+    name,
+    score: Number(formData.get('score')),
+    rank_override: overrideRaw === '' || overrideRaw == null ? null : Number(overrideRaw),
+  };
+
+  const { error } = id
+    ? await supabase.from('bf2_players').update(payload).eq('id', id)
+    : await supabase.from('bf2_players').insert(payload);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+}
+
+export async function deletePlayer(formData) {
+  const supabase = await createClient();
+  const id = formData.get('id');
+
+  const { error } = await supabase.from('bf2_players').delete().eq('id', id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

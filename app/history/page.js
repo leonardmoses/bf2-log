@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import SiteHeader from '@/components/SiteHeader';
 
 export const revalidate = 0;
 
@@ -12,71 +13,75 @@ export default async function HistoryPage() {
     .order('played_at', { ascending: false })
     .order('created_at', { ascending: false });
 
+  const header = (
+    <SiteHeader title="Session History" subtitle="Every logged game, most recent first.">
+      <Link className="button-link" href="/">
+        &larr; Back to progression
+      </Link>
+    </SiteHeader>
+  );
+
   if (error) {
     return (
-      <main className="page">
-        <p className="error">Could not load history: {error.message}</p>
-      </main>
+      <>
+        {header}
+        <main className="page page-section">
+          <p className="error">Could not load history: {error.message}</p>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="page">
-      <header className="page-header">
-        <div>
-          <h1>Session History</h1>
-          <p className="subtitle">Every logged game, most recent first.</p>
-        </div>
-        <Link className="button-link" href="/">
-          &larr; Back to progression
-        </Link>
-      </header>
-
-      <div className="table-wrap">
-        <table className="stats-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Map</th>
-              <th>Players</th>
-              <th>Size</th>
-              <th>Bots</th>
-              <th>Result</th>
-              <th>Difficulty</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(logs ?? []).map((log) => (
-              <tr key={log.id}>
-                <td>{log.played_at ?? '—'}</td>
-                <td className="map-name">{log.bf2_maps?.name ?? 'Unknown'}</td>
-                <td>{log.player_count}</td>
-                <td>{log.map_size}</td>
-                <td>{log.bot_count}</td>
-                <td>
-                  <span
-                    className={
-                      log.result === 'win' ? 'badge badge-yes' : 'badge badge-no'
-                    }
-                  >
-                    {log.result}
-                  </span>
-                </td>
-                <td>{log.difficulty ?? '—'}</td>
-                <td>{log.notes ?? ''}</td>
-              </tr>
-            ))}
-            {(!logs || logs.length === 0) && (
+    <>
+      {header}
+      <main className="page page-section">
+        <div className="table-wrap">
+          <table className="stats-table">
+            <thead>
               <tr>
-                <td colSpan={8} className="empty-row">
-                  No sessions logged yet.
-                </td>
+                <th>Date</th>
+                <th>Map</th>
+                <th>Players</th>
+                <th>Size</th>
+                <th>Bots</th>
+                <th>Result</th>
+                <th>Difficulty</th>
+                <th>Notes</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </main>
+            </thead>
+            <tbody>
+              {(logs ?? []).map((log) => (
+                <tr key={log.id}>
+                  <td>{log.played_at ?? '—'}</td>
+                  <td className="map-name">{log.bf2_maps?.name ?? 'Unknown'}</td>
+                  <td>{log.player_count}</td>
+                  <td>{log.map_size}</td>
+                  <td>{log.bot_count}</td>
+                  <td>
+                    <span
+                      className={
+                        log.result === 'win' ? 'badge badge-yes' : 'badge badge-no'
+                      }
+                    >
+                      {log.result}
+                    </span>
+                  </td>
+                  <td>{log.difficulty ?? '—'}</td>
+                  <td>{log.notes ?? ''}</td>
+                </tr>
+              ))}
+              {(!logs || logs.length === 0) && (
+                <tr>
+                  <td colSpan={8} className="empty-row">
+                    No sessions logged yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </>
   );
 }
