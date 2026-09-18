@@ -1,0 +1,57 @@
+'use client';
+
+import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+// Wraps a table cell's content and shows `tip` in a small floating card on hover or focus.
+// The card is rendered in <body> and positioned with fixed coordinates so the table's
+// scroll container can't clip it; it flips below when there's no room above.
+export default function CellHover({ tip, children }) {
+  const anchor = useRef(null);
+  const card = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchor.current || !card.current) return;
+    const a = anchor.current.getBoundingClientRect();
+    const c = card.current.getBoundingClientRect();
+    const margin = 8;
+    const width = document.documentElement.clientWidth;
+    const left = Math.min(Math.max(a.left + a.width / 2 - c.width / 2, margin), width - c.width - margin);
+    const above = a.top - c.height - margin >= 0;
+    setPos({ left, top: above ? a.top - c.height - 6 : a.bottom + 6 });
+  }, [open]);
+
+  const show = () => setOpen(true);
+  const hide = () => {
+    setOpen(false);
+    setPos(null);
+  };
+
+  return (
+    <div
+      ref={anchor}
+      className="cell-hover"
+      tabIndex={0}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
+      {children}
+      {open &&
+        createPortal(
+          <div
+            ref={card}
+            className="cell-tip"
+            role="tooltip"
+            style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: 'hidden' }}
+          >
+            {tip}
+          </div>,
+          document.body
+        )}
+    </div>
+  );
+}

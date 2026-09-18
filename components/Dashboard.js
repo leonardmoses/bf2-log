@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import RankBadge from '@/components/RankBadge';
+import CellHover from '@/components/CellHover';
 import ProfileModal from '@/components/ProfileModal';
 import { rankForPlayer } from '@/lib/ranks';
 import { playerHref } from '@/lib/profile';
@@ -12,6 +13,36 @@ import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/li
 const LEADERBOARD_SIZE = 9; // three columns of three
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+const dayLabel = (iso) => {
+  if (!iso) return 'date unknown';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+function BotsTip({ summary }) {
+  const { topWin, topLoss, latest } = summary;
+  const rows = [
+    ['Highest at a win', topWin?.bots, null, topWin?.playedAt],
+    ['Highest at a loss', topLoss?.bots, null, topLoss?.playedAt],
+    ['Most recent', latest?.bots, latest?.result, latest?.playedAt],
+  ];
+  return (
+    <>
+      <div className="cell-tip-title">Bots</div>
+      {rows.map(([label, bots, result, date]) => (
+        <div className="cell-tip-row" key={label}>
+          <span>{label}</span>
+          <strong>
+            {bots ?? '\u2014'}
+            {result && <em> {result}</em>}
+          </strong>
+          <span className="cell-tip-date">{bots == null ? '' : dayLabel(date)}</span>
+        </div>
+      ))}
+    </>
+  );
+}
 
 function SizeCell({ summary, available }) {
   if (!available) {
@@ -36,13 +67,14 @@ function SizeCell({ summary, available }) {
 
   const meta = [
     summary.avgDifficulty != null ? `diff ${summary.avgDifficulty.toFixed(1)}` : null,
-    summary.lastBotCount != null ? `bots ${summary.lastBotCount}` : null,
+    summary.botsShown != null ? `bots ${summary.botsShown}` : null,
   ]
     .filter(Boolean)
     .join('  ·  ');
 
   return (
     <td>
+      <CellHover tip={<BotsTip summary={summary} />}>
       <div className="cell-inner">
         <span className="wl-chip">
           <span className={summary.wins > 0 ? 'wl-win' : 'wl-zero'}>{summary.wins}W</span>
@@ -51,6 +83,7 @@ function SizeCell({ summary, available }) {
         </span>
         {meta && <span className="cell-meta">{meta}</span>}
       </div>
+      </CellHover>
     </td>
   );
 }

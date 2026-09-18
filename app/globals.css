@@ -2135,3 +2135,72 @@ a.standing-name:hover {
     flex-basis: 100%;
   }
 }
+
+/* ---------- Table cell hover card ---------- */
+
+.cell-hover {
+  outline: none;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.cell-hover:focus-visible {
+  box-shadow: 0 0 0 2px rgba(143, 22, 32, 0.4);
+}
+
+.cell-tip {
+  position: fixed;
+  z-index: 200;
+  min-width: 300px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  background: linear-gradient(rgba(44, 46, 50, 0.97), rgba(20, 21, 23, 0.97));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  color: #e9eaec;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.cell-tip-title {
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a9adb2;
+}
+
+.cell-tip-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 2px 0;
+}
+
+.cell-tip-row strong {
+  text-align: right;
+}
+
+.cell-tip-row strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: #fff;
+}
+
+.cell-tip-row em {
+  font-style: normal;
+  color: #a9adb2;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.cell-tip-date {
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #a9adb2;
+}
