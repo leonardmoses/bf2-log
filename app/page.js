@@ -15,7 +15,7 @@ export default async function HomePage() {
     supabase
       .from('bf2_game_logs')
       .select('*')
-      .order('played_at', { ascending: false }),
+      .order('played_at', { ascending: false, nullsFirst: false }),
     supabase
       .from('bf2_players')
       .select('id, external_id, name, score, rank_override, country, rounds, wins, losses, kills, deaths, play_seconds, last_online')

@@ -21,7 +21,7 @@ export default async function AdminPage() {
       supabase
         .from('bf2_game_logs')
         .select('*, bf2_maps(name)')
-        .order('played_at', { ascending: false })
+        .order('played_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
         .limit(100),
       supabase.from('bf2_players').select('*').order('score', { ascending: false }),

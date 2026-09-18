@@ -1984,3 +1984,10 @@ a.standing-name:hover {
     border-left: none;
   }
 }
+
+.date-unknown {
+  font-size: 13.5px;
+  font-style: italic;
+  color: var(--muted);
+  white-space: nowrap;
+}
