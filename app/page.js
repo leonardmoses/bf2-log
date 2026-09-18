@@ -16,7 +16,10 @@ export default async function HomePage() {
       .from('bf2_game_logs')
       .select('*')
       .order('played_at', { ascending: false }),
-    supabase.from('bf2_players').select('*').order('score', { ascending: false }),
+    supabase
+      .from('bf2_players')
+      .select('id, external_id, name, score, rank_override, country, rounds, wins, losses, kills, deaths, play_seconds, last_online')
+      .order('score', { ascending: false }),
   ]);
 
   if (mapsError || logsError) {

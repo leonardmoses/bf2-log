@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import RankBadge from '@/components/RankBadge';
+import ProfileModal from '@/components/ProfileModal';
 import { rankForPlayer } from '@/lib/ranks';
+import { playerHref } from '@/lib/profile';
 import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/lib/stats';
 
-const LEADERBOARD_SIZE = 10;
+const LEADERBOARD_SIZE = 9; // three columns of three
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -52,38 +54,115 @@ function SizeCell({ summary, available }) {
   );
 }
 
-function Standings({ players }) {
-  const leaders = [...players]
-    .sort((a, b) => b.score - a.score)
-    .slice(0, LEADERBOARD_SIZE);
+function StandingRow({ player, position, onOpen }) {
+  const rank = rankForPlayer(player);
 
-  if (leaders.length === 0) return null;
+  function handleClick(e) {
+    // let ctrl/cmd/shift/middle clicks open the full page in a new tab as usual
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    onOpen(player);
+  }
+
+  return (
+    <div className="standing-row">
+      <span className={position <= 3 ? 'standing-pos standing-pos-top' : 'standing-pos'}>{position}</span>
+      <RankBadge rank={rank} />
+      <span className="standing-who">
+        <Link className="standing-name" href={playerHref(player)} onClick={handleClick}>
+          {player.name}
+        </Link>
+        <span className="standing-rank">{rank.name}</span>
+      </span>
+      <span className="standing-score">{player.score.toLocaleString('en-US')}</span>
+    </div>
+  );
+}
+
+function Standings({ players, onOpen }) {
+  const [query, setQuery] = useState('');
+
+  const ranked = useMemo(() => [...players].sort((a, b) => b.score - a.score), [players]);
+  const positions = useMemo(() => new Map(ranked.map((p, i) => [p.id, i + 1])), [ranked]);
+
+  const q = query.trim().toLowerCase();
+  const matches = useMemo(
+    () => (q ? ranked.filter((p) => p.name.toLowerCase().includes(q)) : []),
+    [ranked, q]
+  );
+
+  if (ranked.length === 0) return null;
+
+  const searching = q.length > 0;
+  const shown = (searching ? matches : ranked).slice(0, LEADERBOARD_SIZE);
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && matches.length > 0) {
+      e.preventDefault();
+      onOpen(matches[0]);
+    } else if (e.key === 'Escape') {
+      setQuery('');
+    }
+  }
 
   return (
     <div className="section-block">
       <div className="standings">
         <div className="bar-header">
           <span className="bar-header-title">Player Standings</span>
-          <span className="bar-header-note">Score, all rounds</span>
+          <span className="bar-header-note">
+            {searching ? `${matches.length} of ${ranked.length} players` : 'Score, all rounds'}
+          </span>
         </div>
-        <div className="standings-grid">
-          {leaders.map((player, i) => {
-            const rank = rankForPlayer(player);
-            return (
-              <div className="standing-row" key={player.id}>
-                <span className={i < 3 ? 'standing-pos standing-pos-top' : 'standing-pos'}>
-                  {i + 1}
-                </span>
-                <RankBadge rank={rank} />
-                <span className="standing-who">
-                  <span className="standing-name">{player.name}</span>
-                  <span className="standing-rank">{rank.name}</span>
-                </span>
-                <span className="standing-score">{player.score.toLocaleString('en-US')}</span>
-              </div>
-            );
-          })}
+
+        <div className="standings-controls">
+          <div className="standings-control standings-search">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`Search ${ranked.length} players`}
+              aria-label="Search players"
+            />
+            {searching && (
+              <button className="link-button" type="button" onClick={() => setQuery('')}>
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="standings-control">
+            <Link className="nav-link" href="/players">
+              All players &rarr;
+            </Link>
+          </div>
+          <div className="standings-control">
+            <Link className="nav-link" href="/ranks">
+              Rank guide &rarr;
+            </Link>
+          </div>
         </div>
+
+        {shown.length > 0 ? (
+          <div className="standings-grid">
+            {shown.map((player, i) => (
+              <StandingRow
+                key={player.id}
+                player={player}
+                position={searching ? positions.get(player.id) : i + 1}
+                onOpen={onOpen}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="standings-empty">No players match &ldquo;{query.trim()}&rdquo;.</div>
+        )}
+
+        {searching && matches.length > LEADERBOARD_SIZE && (
+          <div className="standings-empty">
+            Showing the top {LEADERBOARD_SIZE} of {matches.length} matches &mdash; keep typing to narrow it down.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -91,6 +170,8 @@ function Standings({ players }) {
 
 export default function Dashboard({ maps, logs, players }) {
   const [playerCount, setPlayerCount] = useState(PLAYER_COUNTS[0]);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const closeProfile = useCallback(() => setSelectedPlayer(null), []);
   const statsIndex = useMemo(() => buildStatsIndex(logs), [logs]);
 
   const tabLogs = useMemo(
@@ -196,7 +277,7 @@ export default function Dashboard({ maps, logs, players }) {
             </div>
           </div>
 
-          <Standings players={players} />
+          <Standings players={players} onOpen={setSelectedPlayer} />
 
           <div className="table-section">
             {tabLogs.length > 0 ? (
@@ -245,6 +326,8 @@ export default function Dashboard({ maps, logs, players }) {
           </div>
         </div>
       </main>
+
+      {selectedPlayer && <ProfileModal player={selectedPlayer} onClose={closeProfile} />}
     </>
   );
 }

@@ -159,13 +159,7 @@ values
   (500620762, 'Espada3 Nel', 68, 28, 9, 19, 18, 504, 55018, 'us', to_timestamp(1769750852)),
   (500372596, 'Armin Arlert_200', 2, 1, 1, 0, 1, 6, 1262, 'us', to_timestamp(1752804122))
 on conflict (external_id) do update set
-  name = excluded.name,
-  score = excluded.score,
-  rounds = excluded.rounds,
-  wins = excluded.wins,
-  losses = excluded.losses,
-  kills = excluded.kills,
-  deaths = excluded.deaths,
-  play_seconds = excluded.play_seconds,
-  country = excluded.country,
-  last_online = excluded.last_online;
+  name = excluded.name, score = excluded.score, rounds = excluded.rounds,
+  wins = excluded.wins, losses = excluded.losses, kills = excluded.kills,
+  deaths = excluded.deaths, play_seconds = excluded.play_seconds,
+  country = excluded.country, last_online = excluded.last_online;
