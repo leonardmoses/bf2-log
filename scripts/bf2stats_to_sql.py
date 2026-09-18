@@ -235,6 +235,8 @@ def award_category(award_id):
 
 def size_for(order, players, flags):
     """Infer the map size a round was played at. flags: sort_order -> (has16, has32, has64)."""
+    if order in cfg.FIXED_SIZE:
+        return cfg.FIXED_SIZE[order]
     if order in cfg.URBAN_ORDERS:
         return 32
     if order == cfg.CITY_DISTRICT_ORDER and players > cfg.SMALL_GAME_MAX_PLAYERS:
@@ -547,6 +549,12 @@ def main(data_dir, test_forget_rounds=()):
         plan = plan_rounds(rounds, live["logs"], live["maps"], forget=set(test_forget_rounds))
         if not live["logs_ready"]:
             warnings.append("The live database has no stats_round_id column yet (4_rounds.sql adds it).")
+        live_orders = {m["sort_order"] for m in live["maps"]}
+        missing = sorted({order for _, order, _ in plan["new"]} - live_orders)
+        if missing:
+            names = sorted({r["map"] for r, order, _ in plan["new"] if order in missing})
+            warnings.append(f"MAPS NOT IN THE LIVE DATABASE YET (sort_order {', '.join(map(str, missing))}: "
+                            f"{', '.join(names)}). Run the SQL that adds them BEFORE 4_rounds.sql.")
         if plan["unmapped"]:
             listing = ", ".join(f"{name} ({n})" for name, n in plan["unmapped"].most_common())
             warnings.append(f"UNMAPPED MAPS (rounds skipped): {listing}. Ask the user which site map each one is "

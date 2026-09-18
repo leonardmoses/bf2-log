@@ -248,6 +248,7 @@ export default function AdminApp({ userEmail, maps, logs, players, playersMissin
               <input
                 type="number"
                 name="sort_order"
+                step="any"
                 defaultValue={maps.length + 1}
                 required
               />

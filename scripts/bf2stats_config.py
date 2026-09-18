@@ -24,6 +24,7 @@ MAP_ORDER = {
     "aix_wake_island_2007": 9,
     "city_district": 10,
     "dalian_plant": 11,
+    "delhi_river": 12.5,  # alphabetical slot between Daqing (12) and Devil's Perch (13); 16 only (supabase/015_add_delhi_river.sql)
     "daqing_dawn": 12,  # legacy name for Daqing Oilfields
     "devils_perch": 13,
     "dragon_valley": 14,
@@ -65,3 +66,7 @@ MAP_ORDER = {
 URBAN_ORDERS = {56, 57}    # Urban Decay / Urban Jungle: always played at 32
 CITY_DISTRICT_ORDER = 10   # City District only goes up to 32
 SMALL_GAME_MAX_PLAYERS = 4
+
+# Maps that only exist at one size, whatever the player count (sort_order -> size).
+# Delhi River is a big map but the game's files list it as 16, and that is all it has.
+FIXED_SIZE = {12.5: 16}

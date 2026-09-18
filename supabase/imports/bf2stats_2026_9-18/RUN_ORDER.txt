@@ -1,5 +1,5 @@
 Stats import from bf2stats_2026_9-18
-  players: 152 | profiles: 152 | earned awards: 557 | rounds: 14 new, 0 linked to sessions you logged, 69 already imported, 20 outside 3-8 players, 1 unmapped
+  players: 152 | profiles: 152 | earned awards: 557 | rounds: 15 new, 0 linked to sessions you logged, 69 already imported, 20 outside 3-8 players, 0 unmapped
 
 Run these in the Supabase SQL editor, in this order (safe to re-run):
   1. 1_players.sql
@@ -9,4 +9,4 @@ Run these in the Supabase SQL editor, in this order (safe to re-run):
   5. 4_rounds.sql
 
 Warnings:
-  - UNMAPPED MAPS (rounds skipped): delhi_river (1). Ask the user which site map each one is (add the map in admin first if it is new), then add it to MAP_ORDER in scripts/bf2stats_config.py and re-run.
+  - MAPS NOT IN THE LIVE DATABASE YET (sort_order 12.5: delhi_river). Run the SQL that adds them BEFORE 4_rounds.sql.

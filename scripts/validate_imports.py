@@ -44,7 +44,7 @@ def main(folder):
             time.sleep(1)
         # stand-ins for Supabase's roles/schema so the policies in schema.sql can be created
         psql("create role anon; create role authenticated; create schema if not exists auth;"
-             "create table if not exists auth.users (id uuid primary key default gen_random_uuid());"
+             "create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text, email_confirmed_at timestamptz);"
              "create or replace function auth.uid() returns uuid language sql as $$ select null::uuid $$;"
              "create or replace function auth.role() returns text language sql as $$ select 'anon'::text $$;")
         setup = [os.path.join(ROOT, "supabase", "schema.sql")] + sorted(glob.glob(os.path.join(ROOT, "supabase", "0*.sql")))
