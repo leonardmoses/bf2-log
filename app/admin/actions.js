@@ -34,7 +34,7 @@ export async function saveGameLog(formData) {
     bot_count: Number(formData.get('bot_count')),
     result: formData.get('result'),
     difficulty: formData.get('difficulty') ? Number(formData.get('difficulty')) : null,
-    played_at: formData.get('played_at'),
+    played_at: formData.get('played_at') || null,
     notes: formData.get('notes') || null,
   };
 

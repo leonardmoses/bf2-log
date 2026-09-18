@@ -61,7 +61,7 @@ export default function AdminApp({ userEmail, maps, logs }) {
       bot_count: log.bot_count,
       result: log.result,
       difficulty: log.difficulty ?? '',
-      played_at: log.played_at,
+      played_at: log.played_at ?? '',
       notes: log.notes ?? '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -188,13 +188,12 @@ export default function AdminApp({ userEmail, maps, logs }) {
           </label>
 
           <label className="field">
-            <span>Date played</span>
+            <span>Date played (optional)</span>
             <input
               type="date"
               name="played_at"
               value={form.played_at}
               onChange={(e) => updateField('played_at', e.target.value)}
-              required
             />
           </label>
 
@@ -320,7 +319,7 @@ export default function AdminApp({ userEmail, maps, logs }) {
             <tbody>
               {logs.map((log) => (
                 <tr key={log.id}>
-                  <td>{log.played_at}</td>
+                  <td>{log.played_at ?? '—'}</td>
                   <td className="map-name">{log.bf2_maps?.name ?? 'Unknown'}</td>
                   <td>{log.player_count}</td>
                   <td>{log.map_size}</td>

@@ -17,7 +17,7 @@ create table if not exists public.bf2_game_logs (
   result text not null check (result in ('win', 'loss')),
   difficulty integer check (difficulty between 1 and 5),
   notes text,
-  played_at date not null default current_date,
+  played_at date default current_date,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );

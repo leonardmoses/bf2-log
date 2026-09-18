@@ -8,7 +8,7 @@ function StatusCell({ summary, available }) {
   if (!available) {
     return (
       <td className="cell cell-na">
-        <span className="badge badge-na">N/A</span>
+        <span>n/a</span>
       </td>
     );
   }
@@ -16,23 +16,24 @@ function StatusCell({ summary, available }) {
   if (!summary || summary.count === 0) {
     return (
       <td className="cell cell-empty">
-        <span className="badge badge-no">Not played</span>
+        <span>&mdash;</span>
       </td>
     );
   }
 
   return (
     <td className="cell cell-filled">
-      <span className="badge badge-yes">Played</span>
-      <div className="cell-detail">
-        <span>
-          {summary.wins}W&ndash;{summary.losses}L
+      <div className="stat-line">
+        <span className="stat-chip stat-chip-record">
+          <span className={summary.wins > 0 ? 'stat-wins' : 'stat-zero'}>{summary.wins}W</span>
+          <span className="stat-sep">&ndash;</span>
+          <span className={summary.losses > 0 ? 'stat-losses' : 'stat-zero'}>{summary.losses}L</span>
         </span>
         {summary.avgDifficulty != null && (
-          <span>Diff {summary.avgDifficulty.toFixed(1)}</span>
+          <span className="stat-chip">Difficulty: {summary.avgDifficulty.toFixed(1)}</span>
         )}
         {summary.lastBotCount != null && (
-          <span>{summary.lastBotCount} bots</span>
+          <span className="stat-chip">Bots: {summary.lastBotCount}</span>
         )}
       </div>
     </td>
@@ -88,6 +89,14 @@ export default function Dashboard({ maps, logs }) {
         {completedForTab} / {totalForTab} map+size combinations played at{' '}
         {playerCount} players ({defaultBots(playerCount)} bots by convention)
       </p>
+      <div className="progress-bar-track">
+        <div
+          className="progress-bar-fill"
+          style={{
+            width: totalForTab ? `${(completedForTab / totalForTab) * 100}%` : '0%',
+          }}
+        />
+      </div>
 
       <div className="table-wrap">
         <table className="stats-table">

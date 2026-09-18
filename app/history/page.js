@@ -49,7 +49,7 @@ export default async function HistoryPage() {
           <tbody>
             {(logs ?? []).map((log) => (
               <tr key={log.id}>
-                <td>{log.played_at}</td>
+                <td>{log.played_at ?? '—'}</td>
                 <td className="map-name">{log.bf2_maps?.name ?? 'Unknown'}</td>
                 <td>{log.player_count}</td>
                 <td>{log.map_size}</td>
