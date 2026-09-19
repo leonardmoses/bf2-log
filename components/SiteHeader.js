@@ -12,9 +12,9 @@ export default function SiteHeader({ signedIn = false, email = '', isAdmin = fal
           </div>
           <div className="brand-divider" />
           <div className="brand-text">
-            <div className="brand-title">Map Progression</div>
+            <div className="brand-title">BF2 Reloaded <span className="brand-title-note"> AIX2 LenMod 1.7</span></div>
             <div className="brand-subtitle">
-              Campaign log &mdash; wins, losses, bots and difficulty across every map and server size.
+              Stats Master Log &mdash; wins | losses | bots | difficulty | dates
             </div>
           </div>
         </Link>

@@ -51,7 +51,7 @@ export default async function RootLayout({ children }) {
         <SiteHeader signedIn={Boolean(user)} email={user?.email ?? ''} isAdmin={isAdminEmail(user?.email)} />
         {children}
         <footer className="site-footer">
-          Battlefield 2 &mdash; DICE, 2005 &middot; coop map log
+          Battlefield 2 &mdash; BF2 &middot; AIX2 &middot; LenMod &middot; Version 1.7
         </footer>
       </body>
     </html>

@@ -142,6 +142,11 @@ h2 {
   color: #efeee9;
 }
 
+.brand-title-note {
+  font-size: 12px; /* smaller note after the title */
+  color: #e8434f; /* same red as the "2" in the logo */
+}
+
 .brand-subtitle {
   font-size: 14px;
   color: #9ba0a5;
