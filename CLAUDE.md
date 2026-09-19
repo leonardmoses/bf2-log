@@ -32,4 +32,5 @@ Anyone can sign up (Supabase signups are on) but only the emails in `ADMIN_EMAIL
 - Commit and push only when the user explicitly says so, and honor any exclusions they name. Never commit `.env.local`, the service-role key or `ADMIN_SIGNUP_CODE`.
 - Verify UI changes in a real browser (Playwright is fine), then stop any dev server or Docker container you started.
 - CSS: write `backdrop-filter` once, with no manual `-webkit-` duplicate (Next's CSS build drops the standard property). Nested backdrop-filters do not blur the page, so keep the modal scrim and panel as siblings.
+- Tailwind CSS v4 is available alongside the hand-written CSS (set up in `app/globals.css` + `postcss.config.mjs`). Preflight (the Tailwind reset) is deliberately NOT imported so existing pages don't change, and the hand-written styles sit inside `@layer components` so Tailwind utilities win over them. Sources scanned: `app/`, `components/`, `lib/`. A new dev server must be restarted after config changes. The project is JavaScript, not TypeScript.
 - Icon paths in `public/images/awards/` can contain odd characters: encode each path segment with `encodeURIComponent`.

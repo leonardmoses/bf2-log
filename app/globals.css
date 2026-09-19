@@ -1,3 +1,16 @@
+/* Tailwind CSS v4, set up so it can be used alongside the hand-written styles below:
+   - no Tailwind base reset ("preflight"), so nothing on the existing pages changes
+   - the hand-written styles live in the "components" layer, so Tailwind utility
+     classes (text-xs, text-red-500, ...) win when both apply to an element
+   - sources are limited to the code folders so data files are never scanned */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../app";
+@source "../components";
+@source "../lib";
+
+@layer components {
 :root {
   --ink: #17191b;
   --ink-2: #1b1e21;
@@ -2448,4 +2461,5 @@ a.standing-name:hover {
 .bar-header-toggle:focus-visible {
   outline: 2px solid rgba(232, 67, 79, 0.9);
   outline-offset: 2px;
+}
 }
