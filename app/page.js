@@ -3,6 +3,30 @@ import Dashboard from '@/components/Dashboard';
 
 export const revalidate = 0;
 
+// Names of the human players in each session (log id -> [names]). Empty until the
+// bf2_session_players table exists and has been filled by a stats import.
+async function loadSessionPlayers(supabase) {
+  const byLog = new Map();
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from('bf2_session_players')
+      .select('log_id, bf2_players(name)')
+      .order('log_id')
+      .order('player_id')
+      .range(from, from + pageSize - 1);
+    if (error || !data) break;
+    for (const row of data) {
+      const name = row.bf2_players?.name?.trim();
+      if (!name) continue;
+      if (!byLog.has(row.log_id)) byLog.set(row.log_id, []);
+      byLog.get(row.log_id).push(name);
+    }
+    if (data.length < pageSize) break;
+  }
+  return byLog;
+}
+
 export default async function HomePage({ searchParams }) {
   const { players: playersParam } = await searchParams;
   const supabase = await createClient();
@@ -33,11 +57,17 @@ export default async function HomePage({ searchParams }) {
     );
   }
 
+  const sessionPlayers = await loadSessionPlayers(supabase);
+  const logsWithPlayers = (logs ?? []).map((log) => ({
+    ...log,
+    players: sessionPlayers.get(log.id) ?? null,
+  }));
+
   // bf2_players is optional until its migration has been run.
   return (
     <Dashboard
       maps={maps ?? []}
-      logs={logs ?? []}
+      logs={logsWithPlayers}
       players={players ?? []}
       initialPlayerCount={Number(playersParam)}
     />

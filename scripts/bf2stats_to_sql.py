@@ -11,6 +11,7 @@ supabase/imports/<dump folder name>/ :
   2_new_awards.sql       placeholder catalog rows for award ids we don't know   only if needed
   3_profiles_N.sql       full profile stats + earned awards (split into parts)  always
   4_rounds.sql           new rounds (dated) + links to sessions you logged      only if needed
+  5_session_players.sql  which human players were in each session (needs 016)   when rounds exist
   RUN_ORDER.txt          what to run, in order, and every warning
 
 Everything is safe to re-run. Player IP addresses are never read or exported.
@@ -259,16 +260,18 @@ def plan_rounds(rounds, live_logs, live_maps, forget=()):
 
     pairs, new, unmapped = [], [], collections.Counter()
     used = set()
+    included = []  # every in-range, mapped round that is (or is about to be) a session
     stats = {"outside_range": 0, "already_imported": 0}
 
     for r in sorted(rounds, key=lambda r: r["id"]):
         if not lo <= r["p"] <= hi:
             stats["outside_range"] += 1
             continue
+        order = cfg.MAP_ORDER.get(r["map"])
         if r["id"] in known:
             stats["already_imported"] += 1
+            included.append(r["id"])
             continue
-        order = cfg.MAP_ORDER.get(r["map"])
         if order is None:
             unmapped[r["map"]] += 1
             continue
@@ -288,10 +291,12 @@ def plan_rounds(rounds, live_logs, live_maps, forget=()):
             log = min(candidates, key=lambda c: c[:3])[3]
             used.add(log["id"])
             pairs.append((log, r))
+            included.append(r["id"])
         else:
             new.append((r, order, size_for(order, r["p"], flags)))
+            included.append(r["id"])
 
-    return {"pairs": pairs, "new": new, "unmapped": unmapped, **stats}
+    return {"pairs": pairs, "new": new, "unmapped": unmapped, "included": included, **stats}
 
 
 def rounds_sql(plan, source):
@@ -411,17 +416,23 @@ def main(data_dir, test_forget_rounds=()):
             if count > top_victim.get(attacker, (None, 0))[1]:
                 top_victim[attacker] = (victim, count)
 
+        # Humans per round. The address column is only used inside this query to tell humans
+        # from bots; it is never selected or exported.
+        host_ids = ", ".join(str(i) for i in sorted(cfg.HOST_PLAYER_IDS)) or "-1"
+        raw_humans = run_sql(
+            "SELECT h.id, h.timestamp FROM bf2stats.player_history h JOIN bf2stats.player p ON p.id = h.id "
+            f"WHERE p.ip NOT IN ('', '0.0.0.0', '127.0.0.1') OR p.id IN ({host_ids})")
         award_rows = run_sql("SELECT id, awd, level, `first`, earned FROM bf2stats.awards ORDER BY id, awd")
         raw_rounds = run_sql(
             "SELECT r.id, r.timestamp, COALESCE(m.name, CONCAT('mapid_', r.mapid)), r.pids1, r.pids2, "
-            "r.tickets1, r.tickets2 FROM bf2stats.round_history r LEFT JOIN bf2stats.mapinfo m ON m.id = r.mapid "
+            "r.tickets1, r.tickets2, r.time FROM bf2stats.round_history r LEFT JOIN bf2stats.mapinfo m ON m.id = r.mapid "
             "ORDER BY r.timestamp")
     finally:
         sh("docker", "rm", "-f", CONTAINER, check=False)
 
     os.makedirs(out_dir, exist_ok=True)
     for name in os.listdir(out_dir):  # replace any earlier run for this dump
-        if re.match(r"[1-4]_.*\.sql$", name) or name == "RUN_ORDER.txt":
+        if re.match(r"[1-5]_.*\.sql$", name) or name == "RUN_ORDER.txt":
             os.remove(os.path.join(out_dir, name))
     written = []
 
@@ -542,10 +553,10 @@ def main(data_dir, test_forget_rounds=()):
     if live:
         tz = ZoneInfo(cfg.TIMEZONE)
         rounds = []
-        for rid, ts, map_name, p1, p2, t1, t2 in raw_rounds:
+        for rid, ts, map_name, p1, p2, t1, t2, dur in raw_rounds:
             local = datetime.datetime.fromtimestamp(int(ts), datetime.timezone.utc).astimezone(tz).date()
             rounds.append({"id": int(rid), "local": local, "map": map_name, "p": int(p1), "bots": int(p2),
-                           "win": int(t1) > int(t2)})
+                           "win": int(t1) > int(t2), "end": int(ts) + int(dur)})
         plan = plan_rounds(rounds, live["logs"], live["maps"], forget=set(test_forget_rounds))
         if not live["logs_ready"]:
             warnings.append("The live database has no stats_round_id column yet (4_rounds.sql adds it).")
@@ -565,6 +576,52 @@ def main(data_dir, test_forget_rounds=()):
         round_summary = (f"{len(plan['new'])} new, {len(plan['pairs'])} linked to sessions you logged, "
                          f"{plan['already_imported']} already imported, {plan['outside_range']} outside "
                          f"{cfg.PLAYER_RANGE[0]}-{cfg.PLAYER_RANGE[1]} players, {sum(plan['unmapped'].values())} unmapped")
+
+    # ---------------- 5: human players in each session ----------------
+    if live:
+        wanted = set(plan["included"])
+        # Round timestamps are rounded to a coarse grid, so each human's end-of-round record
+        # is matched to the nearest round end (within a few minutes) instead of a fixed window.
+        ends = sorted((r["end"], r["id"]) for r in rounds)
+        pairs_by_round = collections.defaultdict(set)
+        for pid, ts in raw_humans:
+            if pid not in by_id:
+                continue
+            end, rid = min(ends, key=lambda e: abs(e[0] - int(ts)))
+            if abs(end - int(ts)) <= 200 and rid in wanted:
+                pairs_by_round[rid].add(pid)
+        pairs_by_round = {rid: sorted(pids) for rid, pids in pairs_by_round.items()}
+        expected = {r["id"]: r["p"] for r in rounds}
+        off = [f"#{rid} ({len(pids)} found, {expected[rid]} recorded)" for rid, pids in sorted(pairs_by_round.items())
+               if len(pids) != expected[rid]]
+        if off:
+            warnings.append("Human count differs from the stats database's own count (players who joined late or "
+                            f"left early can do this): {', '.join(off)}.")
+        missing = sorted(wanted - set(pairs_by_round))
+        if missing:
+            warnings.append(f"No human players found for stats rounds: {', '.join(map(str, missing))}.")
+        flat = [(rid, pid) for rid in sorted(pairs_by_round) for pid in pairs_by_round[rid]]
+        if flat:
+            blocks = []
+            for start in range(0, len(flat), 400):
+                vals = ",\n".join(f"  ({rid}, {pid})" for rid, pid in flat[start:start + 400])
+                blocks.append("\n".join([
+                    "insert into public.bf2_session_players (log_id, player_id)",
+                    "select l.id, p.id",
+                    "from (values",
+                    vals,
+                    ") as v(round_id, external_id)",
+                    "join public.bf2_game_logs l on l.stats_round_id = v.round_id",
+                    "join public.bf2_players p on p.external_id = v.external_id",
+                    "on conflict do nothing;",
+                ]))
+            write("5_session_players.sql", "\n".join([
+                f"-- Human players in each session (bots excluded), from {source}.",
+                "-- Run after 1_players.sql and 4_rounds.sql, and after supabase/016_session_players.sql.",
+                "-- Safe to re-run.",
+                "",
+            ]) + "\n" + "\n\n".join(blocks) + "\n")
+        round_summary += f" | session players: {len(flat)} links across {len(pairs_by_round)} rounds"
 
     # ---------------- run order + summary ----------------
     summary = [

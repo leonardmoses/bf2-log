@@ -4,7 +4,7 @@
 Usage: python3 scripts/validate_imports.py supabase/imports/bf2stats_2026_9-18
 
 Applies schema.sql and the numbered migrations (supabase/0*.sql) to an empty database,
-then runs the folder's 1_/2_/3_/4_ files TWICE (imports must be safe to re-run) and
+then runs the folder's 1_ to 5_ files TWICE (imports must be safe to re-run) and
 prints row counts. Any SQL error stops the run and is printed.
 """
 import glob
@@ -31,9 +31,9 @@ def psql(sql=None, path=None):
 
 
 def main(folder):
-    files = sorted(f for f in glob.glob(os.path.join(folder, "*.sql")) if os.path.basename(f)[0] in "1234")
+    files = sorted(f for f in glob.glob(os.path.join(folder, "*.sql")) if os.path.basename(f)[0] in "12345")
     if not files:
-        sys.exit("No 1_/2_/3_/4_ .sql files in that folder.")
+        sys.exit("No 1_ to 5_ .sql files in that folder.")
     sh("docker", "rm", "-f", NAME, check=False)
     sh("docker", "run", "-d", "--name", NAME, "-e", "POSTGRES_PASSWORD=x", "postgres:16")
     try:
@@ -52,6 +52,11 @@ def main(folder):
             r = psql(path=path)
             if r.returncode:
                 sys.exit(f"MIGRATION FAILED {os.path.basename(path)}:\n{r.stderr}")
+        # earlier one-off files (e.g. 009_import_rounds.sql) that later imports build on
+        for path in sorted(glob.glob(os.path.join(folder, "0*.sql"))):
+            r = psql(path=path)
+            if r.returncode:
+                sys.exit(f"EARLIER FILE FAILED {os.path.basename(path)}:\n{r.stderr[:1500]}")
         for attempt in (1, 2):
             for path in files:
                 r = psql(path=path)
@@ -59,8 +64,8 @@ def main(folder):
                     sys.exit(f"FAILED (run {attempt}) {os.path.basename(path)}:\n{r.stderr[:1500]}")
             counts = psql("select (select count(*) from bf2_players), (select count(*) from bf2_players where stats is not null),"
                           " (select count(*) from bf2_player_awards), (select count(*) from bf2_awards),"
-                          " (select count(*) from bf2_game_logs)").stdout.strip()
-            print(f"run {attempt}: players | with profile | earned awards | catalog | logs = {counts}")
+                          " (select count(*) from bf2_game_logs), (select count(*) from bf2_session_players)").stdout.strip()
+            print(f"run {attempt}: players | with profile | earned awards | catalog | logs | session players = {counts}")
         print("OK: every file ran twice without errors")
     finally:
         sh("docker", "rm", "-f", NAME, check=False)

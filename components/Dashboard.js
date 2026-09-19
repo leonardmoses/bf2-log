@@ -30,21 +30,34 @@ const dayLabel = (iso) => {
 function BotsTip({ summary }) {
   const { topWin, topLoss, latest } = summary;
   const rows = [
-    ['Highest at a win', topWin?.bots, null, topWin?.playedAt],
-    ['Highest at a loss', topLoss?.bots, null, topLoss?.playedAt],
-    ['Most recent', latest?.bots, latest?.result, latest?.playedAt],
+    ['Highest at a win', topWin, null],
+    ['Highest at a loss', topLoss, null],
+    ['Most recent', latest, latest?.result],
   ];
   return (
     <>
       <div className="cell-tip-title">Bots</div>
-      {rows.map(([label, bots, result, date]) => (
-        <div className="cell-tip-row" key={label}>
-          <span>{label}</span>
-          <strong>
-            {bots ?? '\u2014'}
-            {result && <em> {result}</em>}
-          </strong>
-          <span className="cell-tip-date">{bots == null ? '' : dayLabel(date)}</span>
+      {rows.map(([label, entry, result]) => (
+        <div className="cell-tip-item" key={label}>
+          <div className="cell-tip-row">
+            <span>{label}</span>
+            <strong>
+              {entry?.bots ?? '\u2014'}
+              {result && <em> {result}</em>}
+            </strong>
+            <span className="cell-tip-date">{entry?.bots == null ? '' : dayLabel(entry.playedAt)}</span>
+          </div>
+          {entry?.bots != null && (
+            <div className="cell-tip-players">
+              {entry.players?.length
+                ? entry.players.map((name, i) => (
+                    <span className="cell-tip-name" key={`${name}-${i}`}>
+                      {name}
+                    </span>
+                  ))
+                : 'Players not recorded'}
+            </div>
+          )}
         </div>
       ))}
     </>

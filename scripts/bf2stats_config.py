@@ -70,3 +70,9 @@ SMALL_GAME_MAX_PLAYERS = 4
 # Maps that only exist at one size, whatever the player count (sort_order -> size).
 # Delhi River is a big map but the game's files list it as 16, and that is all it has.
 FIXED_SIZE = {12.5: 16}
+
+# Who counts as a human when listing the players in a session. The stats database has no
+# bot flag, but bots always connect from the server machine (loopback address) while remote
+# humans have a real address, so real address = human. The host plays on the server machine
+# itself, so their account can't be told apart from a bot that way and is listed here.
+HOST_PLAYER_IDS = {500620831}  # Qalexeon

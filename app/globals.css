@@ -2151,32 +2151,35 @@ a.standing-name:hover {
 .cell-tip {
   position: fixed;
   z-index: 200;
-  min-width: 300px;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  min-width: min(430px, calc(100vw - 16px));
+  max-width: min(560px, calc(100vw - 16px));
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 5px;
-  background: linear-gradient(rgba(44, 46, 50, 0.97), rgba(20, 21, 23, 0.97));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
-  color: #e9eaec;
-  font-size: 13px;
+  background: linear-gradient(rgba(43, 45, 50, 0.7), rgba(15, 16, 18, 0.76));
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: #f4f5f6;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
 .cell-tip-title {
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #a9adb2;
+  color: #dfe1e4;
 }
 
 .cell-tip-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: baseline;
-  gap: 4px 14px;
-  padding: 2px 0;
+  gap: 4px 18px;
+  padding: 3px 0;
 }
 
 .cell-tip-row strong {
@@ -2191,9 +2194,9 @@ a.standing-name:hover {
 
 .cell-tip-row em {
   font-style: normal;
-  color: #a9adb2;
+  color: #dfe1e4;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.06em;
 }
 
@@ -2201,8 +2204,8 @@ a.standing-name:hover {
   text-align: right;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: #a9adb2;
+  font-size: 13px;
+  color: #dfe1e4;
 }
 
 /* ---------- Results / last played toggle ---------- */
@@ -2341,4 +2344,25 @@ a.standing-name:hover {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
+}
+
+.cell-tip-item + .cell-tip-item {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cell-tip-players {
+  padding-top: 4px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #e6e8ea;
+  white-space: normal;
+}
+
+/* a player's name never splits across lines: the whole name wraps to the next line instead */
+.cell-tip-name {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.9em; /* a wide gap between names instead of commas */
 }
