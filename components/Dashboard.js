@@ -14,6 +14,13 @@ const LEADERBOARD_SIZE = 9; // three columns of three
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+// Compact date for the table cells, e.g. "29 Jun 25"
+const shortDay = (iso) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
+  return `${d} ${month} ${String(y).slice(2)}`;
+};
+
 const dayLabel = (iso) => {
   if (!iso) return 'date unknown';
   const [y, m, d] = iso.split('-').map(Number);
@@ -44,7 +51,7 @@ function BotsTip({ summary }) {
   );
 }
 
-function SizeCell({ summary, available }) {
+function SizeCell({ summary, available, showDates }) {
   if (!available) {
     return (
       <td>
@@ -75,13 +82,23 @@ function SizeCell({ summary, available }) {
   return (
     <td>
       <CellHover tip={<BotsTip summary={summary} />}>
-      <div className="cell-inner">
-        <span className="wl-chip">
-          <span className={summary.wins > 0 ? 'wl-win' : 'wl-zero'}>{summary.wins}W</span>
-          <span className="wl-sep"> / </span>
-          <span className={summary.losses > 0 ? 'wl-loss' : 'wl-zero'}>{summary.losses}L</span>
-        </span>
-        {meta && <span className="cell-meta">{meta}</span>}
+      <div className="cell-swap" data-view={showDates ? 'dates' : 'results'}>
+        <div className="cell-inner cell-view cell-view-results" aria-hidden={showDates}>
+          <span className="wl-chip">
+            <span className={summary.wins > 0 ? 'wl-win' : 'wl-zero'}>{summary.wins}W</span>
+            <span className="wl-sep"> / </span>
+            <span className={summary.losses > 0 ? 'wl-loss' : 'wl-zero'}>{summary.losses}L</span>
+          </span>
+          {meta && <span className="cell-meta">{meta}</span>}
+        </div>
+        <div className="cell-inner cell-view cell-view-dates" aria-hidden={!showDates}>
+          <span className="cell-meta">
+            Last played:{' '}
+            <span className="cell-date-value">
+              {summary.lastPlayedAt ? shortDay(summary.lastPlayedAt) : 'date unknown'}
+            </span>
+          </span>
+        </div>
       </div>
       </CellHover>
     </td>
@@ -254,6 +271,7 @@ export default function Dashboard({ maps, logs, players }) {
   const [mapQuery, setMapQuery] = useState('');
   const [sizeFilter, setSizeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showDates, setShowDates] = useState(false);
   const filtersActive = mapQuery.trim() !== '' || sizeFilter !== 'all' || statusFilter !== 'all';
   const visibleSizes = sizeFilter === 'all' ? MAP_SIZES : [Number(sizeFilter)];
 
@@ -384,6 +402,18 @@ export default function Dashboard({ maps, logs, players }) {
                     Clear
                   </button>
                 )}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showDates}
+                  className="switch-toggle"
+                  onClick={() => setShowDates((v) => !v)}
+                >
+                  <span className="switch-track">
+                    <span className="switch-knob" />
+                  </span>
+                  Last played
+                </button>
                 <span className="map-filter-count">
                   {filtersActive ? `${visibleMaps.length} of ${maps.length} maps` : ''}
                 </span>
@@ -407,6 +437,7 @@ export default function Dashboard({ maps, logs, players }) {
                             key={size}
                             available={mapSupportsSize(map, size)}
                             summary={statsIndex[map.id]?.[playerCount]?.[size]}
+                            showDates={showDates}
                           />
                         ))}
                       </tr>
