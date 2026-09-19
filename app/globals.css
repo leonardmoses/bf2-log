@@ -220,6 +220,10 @@ h2 {
   display: inline-block;
 }
 
+.header-icon {
+  display: none;
+}
+
 .header-user-label {
   max-width: 240px;
   overflow: hidden;
@@ -1182,11 +1186,48 @@ h2 {
   }
 
   .site-header-inner {
+    position: relative;
     padding: 14px 14px 12px;
   }
 
-  .header-user {
-    max-width: 150px;
+  /* login / user + sign out sit in the top-right corner, level with the logo, as icon buttons;
+     the title and subtitle wrap right underneath with no gap */
+  .header-actions {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    gap: 6px;
+  }
+
+  .brand {
+    row-gap: 0;
+  }
+
+  .header-icon {
+    display: block;
+    width: 17px;
+    height: 17px;
+  }
+
+  .header-button,
+  .header-user-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: #f4f2ee;
+  }
+
+  /* the words stay for screen readers */
+  .header-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .summary-value {
@@ -1197,15 +1238,23 @@ h2 {
     justify-content: flex-end;
   }
 
+  .tabs-row {
+    row-gap: 0;
+  }
+
   .tabs-row .tabs {
     flex-wrap: nowrap;
     width: 100%;
+    padding-top: 8px; /* small gap under the button */
   }
 
   .tabs-row .nav-link {
     order: -1;
     margin-bottom: 0;
-    margin-top: 12px;
+    margin-top: 28px; /* room above, so the button sits with the tabs rather than the standings */
+    /* "View full session history" spans the whole row */
+    flex: 1 1 100%;
+    text-align: center;
   }
 
   .tab {
@@ -2161,8 +2210,98 @@ a.standing-name:hover {
 }
 
 @media (max-width: 720px) {
+  .map-filters {
+    gap: 8px;
+  }
+
   .map-filters .map-filter-search {
     flex-basis: 100%;
+  }
+
+  /* size, status and the Last played switch share one line */
+  .map-filters select {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 4px 6px 8px;
+  }
+
+  .map-filters .switch-toggle {
+    flex: 0 0 auto;
+    margin-left: 0;
+    gap: 6px;
+    padding: 0 2px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  /* a forced line break after the switch, so Clear and the "N of 62 maps" count always
+     drop to a line of their own underneath and never squeeze the dropdowns */
+  .map-filters .switch-toggle {
+    order: 4;
+  }
+
+  .map-filters::after {
+    content: '';
+    order: 4;
+    flex-basis: 100%;
+    height: 0;
+    margin-top: -8px; /* cancels the row gap the break would add when nothing follows it */
+  }
+
+  .map-filters .link-button {
+    order: 5;
+  }
+
+  .map-filters .map-filter-count {
+    order: 6;
+  }
+
+  .map-filters .map-filter-count:empty {
+    display: none;
+  }
+
+  /* the dropdowns never shrink below what their text needs */
+  .map-filters select {
+    min-width: 64px;
+  }
+}
+
+/* smallest phones: slightly smaller text so the dropdown labels are not cut off */
+@media (max-width: 380px) {
+  .map-filters select {
+    font-size: 13.5px;
+    padding-left: 6px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 340px) {
+  .map-filters select {
+    font-size: 12px;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .map-filters .switch-toggle {
+    gap: 5px;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .map-filters .switch-track {
+    width: 32px;
+    height: 18px;
+  }
+
+  .map-filters .switch-knob {
+    width: 14px;
+    height: 14px;
+  }
+
+  .map-filters .switch-toggle[aria-checked='true'] .switch-knob {
+    transform: translateX(14px);
   }
 }
 
@@ -2436,6 +2575,10 @@ a.standing-name:hover {
 }
 
 /* Map header: sort button on the left, "Default order" on the right of the same cell */
+.history-sort {
+  display: none;
+}
+
 .th-split {
   display: flex;
   align-items: center;
@@ -2975,6 +3118,218 @@ a.standing-name:hover {
   .fav-value {
     font-size: 11px;
     overflow-wrap: break-word;
+  }
+}
+
+/* ---------- Phones: the history table becomes one card per session ---------- */
+
+@media (max-width: 720px) {
+  .history-sort {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .history-sort label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #5c6065;
+  }
+
+  .history-sort select {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 6px 8px;
+    border: 1px solid rgba(116, 118, 122, 0.45);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.85);
+    font-size: 14.5px;
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+
+  .history-sort-dir {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(116, 118, 122, 0.5);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #3d4145;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .table-wrap:has(> .history-table) {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .history-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .history-table thead {
+    display: none;
+  }
+
+  .history-table tbody {
+    display: block;
+  }
+
+  /* card: map + result on top, date under it, then four figures, then notes */
+  .history-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(116, 118, 122, 0.3);
+    border-radius: 5px;
+    background: var(--row);
+  }
+
+  .history-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .history-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    white-space: normal;
+  }
+
+  .history-table td.history-map {
+    grid-column: 1 / 4;
+    grid-row: 1;
+    padding: 10px 6px 0 14px;
+    font-size: 16px;
+  }
+
+  .history-table td.history-result {
+    grid-column: 4;
+    grid-row: 1;
+    padding: 10px 14px 0 6px;
+    text-align: right;
+  }
+
+  .history-table td.history-date {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding: 1px 14px 9px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Players / Size / Bots / Difficulty: four equal segments, label over value */
+  .history-table td[data-label] {
+    grid-row: 3;
+    padding: 6px 2px 7px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    border-top: 1px solid rgba(116, 118, 122, 0.2);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .history-table td[data-label] + td[data-label],
+  .history-table td.history-result + td[data-label] {
+    box-shadow: inset 1px 0 0 rgba(116, 118, 122, 0.2);
+  }
+
+  .history-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8b8f93;
+  }
+
+  .history-table td.history-notes {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    padding: 7px 14px 9px;
+    border-top: 1px solid rgba(116, 118, 122, 0.2);
+    font-size: 13px;
+    font-style: italic;
+    color: #6b7075;
+  }
+
+  .history-table td.history-notes:empty {
+    display: none;
+  }
+
+  .history-table tr td.empty-row {
+    grid-column: 1 / -1;
+    padding: 18px 12px;
+    text-align: center;
+  }
+}
+
+/* phones: side padding matches the page (14px) so the footer line has the room it needs */
+@media (max-width: 720px) {
+  .site-footer {
+    padding: 18px 14px 32px;
+  }
+}
+
+/* ---------- Phones: the page buttons ("Rank guide", "Back to progression", ...) share the full row ---------- */
+
+@media (max-width: 720px) {
+  .page-actions {
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .page-actions > .nav-link {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 4px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  /* three buttons: widths follow the text, and a long label may wrap to a second line */
+  .page-actions:has(> .nav-link:nth-child(3)) {
+    align-items: stretch;
+  }
+
+  .page-actions:has(> .nav-link:nth-child(3)) > .nav-link {
+    flex: 1 1 auto;
+    white-space: normal;
+    padding: 9px 4px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
   }
 }
 

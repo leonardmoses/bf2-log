@@ -50,7 +50,7 @@ export default async function RootLayout({ children }) {
       <body>
         <SiteHeader signedIn={Boolean(user)} email={user?.email ?? ''} isAdmin={isAdminEmail(user?.email)} />
         {children}
-        <footer className="site-footer">
+        <footer className="site-footer text-xs max-sm:text-[min(12px,2.85vw)] max-sm:tracking-[0.05em] max-sm:whitespace-nowrap">
           Battlefield 2 &mdash; BF2 &middot; AIX2 &middot; LenMod &middot; Version 1.7
         </footer>
       </body>
