@@ -2305,6 +2305,8 @@ a.standing-name:hover {
 
 .stats-table td.cell-played {
   padding: 0;
+  /* a 1px outline at 20% opacity around every cell with a recorded session (no layout shift) */
+  box-shadow: inset 0 0 0 1px rgba(30, 32, 36, 0.2);
 }
 
 .stat-strip {
@@ -2328,7 +2330,7 @@ a.standing-name:hover {
 }
 
 .stat-seg + .stat-seg {
-  box-shadow: inset 1px 0 0 rgba(116, 118, 122, 0.22);
+  box-shadow: inset 1px 0 0 rgba(30, 32, 36, 0.2);
 }
 
 .stat-label {
