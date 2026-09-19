@@ -24,7 +24,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata = {
   title: "BF2 Log",
-  description: "Battlefield 2 weekly game night map progression tracker",
+  description: "Battlefield 2 stat progression tracker",
 };
 
 async function currentUser() {
