@@ -235,8 +235,18 @@ function Standings({ players, onOpen }) {
   );
 }
 
-export default function Dashboard({ maps, logs, players }) {
-  const [playerCount, setPlayerCount] = useState(PLAYER_COUNTS[0]);
+export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
+  // The chosen tab lives in the address (?players=5) so a refresh or shared link keeps it.
+  const [playerCount, setPlayerCount] = useState(
+    PLAYER_COUNTS.includes(initialPlayerCount) ? initialPlayerCount : PLAYER_COUNTS[0]
+  );
+
+  function selectPlayerCount(count) {
+    setPlayerCount(count);
+    const url = new URL(window.location.href);
+    url.searchParams.set('players', count);
+    window.history.replaceState(null, '', url);
+  }
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const closeProfile = useCallback(() => setSelectedPlayer(null), []);
   const statsIndex = useMemo(() => buildStatsIndex(logs), [logs]);
@@ -333,7 +343,7 @@ export default function Dashboard({ maps, logs, players }) {
             <button
               key={count}
               className={`tab ${playerCount === count ? 'tab-active' : ''}`}
-              onClick={() => setPlayerCount(count)}
+              onClick={() => selectPlayerCount(count)}
               type="button"
             >
               {count} Players

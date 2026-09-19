@@ -3,7 +3,8 @@ import Dashboard from '@/components/Dashboard';
 
 export const revalidate = 0;
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }) {
+  const { players: playersParam } = await searchParams;
   const supabase = await createClient();
 
   const [
@@ -33,5 +34,12 @@ export default async function HomePage() {
   }
 
   // bf2_players is optional until its migration has been run.
-  return <Dashboard maps={maps ?? []} logs={logs ?? []} players={players ?? []} />;
+  return (
+    <Dashboard
+      maps={maps ?? []}
+      logs={logs ?? []}
+      players={players ?? []}
+      initialPlayerCount={Number(playersParam)}
+    />
+  );
 }
