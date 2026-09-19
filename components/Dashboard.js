@@ -64,10 +64,11 @@ function BotsTip({ summary }) {
   );
 }
 
-function SizeCell({ summary, available, showDates }) {
+// `size` becomes the row label when the table turns into cards on phones
+function SizeCell({ summary, available, showDates, size }) {
   if (!available) {
     return (
-      <td>
+      <td data-label={`Size ${size}`}>
         <div className="cell-inner">
           <span className="cell-na">N/A</span>
         </div>
@@ -77,7 +78,7 @@ function SizeCell({ summary, available, showDates }) {
 
   if (!summary || summary.count === 0) {
     return (
-      <td>
+      <td data-label={`Size ${size}`}>
         <div className="cell-inner">
           <span className="cell-unplayed">&mdash;</span>
         </div>
@@ -86,7 +87,7 @@ function SizeCell({ summary, available, showDates }) {
   }
 
   return (
-    <td className="cell-played">
+    <td className="cell-played" data-label={`Size ${size}`}>
       <CellHover tip={<BotsTip summary={summary} />}>
       <div className="cell-swap" data-view={showDates ? 'dates' : 'results'}>
         <div className="cell-inner cell-view cell-view-results" aria-hidden={showDates}>
@@ -377,8 +378,13 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
               className={`tab ${playerCount === count ? 'tab-active' : ''}`}
               onClick={() => selectPlayerCount(count)}
               type="button"
+              aria-label={`${count} Players`}
+              aria-pressed={playerCount === count}
             >
-              {count} Players
+              <span className="tab-long">{count} Players</span>
+              <span className="tab-short" aria-hidden="true">
+                {count}P
+              </span>
             </button>
           ))}
         </nav>
@@ -499,6 +505,7 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
                             available={mapSupportsSize(map, size)}
                             summary={statsIndex[map.id]?.[playerCount]?.[size]}
                             showDates={showDates}
+                            size={size}
                           />
                         ))}
                       </tr>

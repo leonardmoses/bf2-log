@@ -132,11 +132,11 @@ export default async function RanksPage({ searchParams }) {
                           </span>
                         </div>
                       </td>
-                      <td className="num rank-score">{formatNumber(rank.score)}</td>
-                      <td className="rank-req">
+                      <td className="num rank-score" data-label="Score needed">{formatNumber(rank.score)}</td>
+                      <td className="rank-req" data-label="Requirements">
                         <Requirements index={rank.index} />
                       </td>
-                      <td className="rank-holders">
+                      <td className="rank-holders" data-label="On this server">
                         {holders.length === 0 && <span className="req-none">&mdash;</span>}
                         {holders.length > NAME_LIMIT && (
                           <span className="holders-count">{holders.length} players</span>

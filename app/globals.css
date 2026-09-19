@@ -375,6 +375,10 @@ h2 {
   cursor: pointer;
 }
 
+.tab-short {
+  display: none;
+}
+
 .tab:hover {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.62);
@@ -1210,6 +1214,16 @@ h2 {
     font-size: 12px;
     letter-spacing: 0.06em;
     text-align: center;
+  }
+
+  /* phones: "3P" instead of "3 Players" so all six tabs fit on one line */
+  .tab-long {
+    display: none;
+  }
+
+  .tab-short {
+    display: inline;
+    white-space: nowrap;
   }
 
   .standings-grid {
@@ -2462,4 +2476,506 @@ a.standing-name:hover {
   outline: 2px solid rgba(232, 67, 79, 0.9);
   outline-offset: 2px;
 }
+
+/* ---------- Phones: the map table becomes one card per map ---------- */
+
+@media (max-width: 720px) {
+  .table-wrap:has(> .map-table) {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .map-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .map-table thead,
+  .map-table tbody,
+  .map-table tr {
+    display: block;
+  }
+
+  /* the header keeps only the Map cell, which holds the sort controls */
+  .map-table thead th:not(:first-child) {
+    display: none;
+  }
+
+  .map-table thead th:first-child {
+    display: block;
+    width: auto;
+    border-radius: 5px;
+  }
+
+  .map-table tbody tr {
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(116, 118, 122, 0.3);
+    border-radius: 5px;
+    background: var(--row);
+  }
+
+  .map-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .map-table td.map-name {
+    display: block;
+    width: auto;
+    padding: 9px 14px;
+    background: rgba(255, 255, 255, 0.75);
+    border-right: 0;
+    border-bottom: 1px solid rgba(116, 118, 122, 0.25);
+    font-size: 16px;
+  }
+
+  .map-table td[data-label] {
+    display: flex;
+    align-items: stretch;
+    min-height: 32px;
+    padding: 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(116, 118, 122, 0.18);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .map-table tr td:last-child {
+    border-bottom: 0;
+  }
+
+  /* row label: "Size 16", "Size 32", "Size 64" */
+  .map-table td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #5c6065;
+    background: rgba(0, 0, 0, 0.04);
+    border-right: 1px solid rgba(116, 118, 122, 0.25);
+  }
+
+  /* rows with a recorded session stay roomy, empty and N/A rows are compact */
+  .map-table td.cell-played {
+    min-height: 50px;
+  }
+
+  .map-table td[data-label] > .cell-inner {
+    min-height: 0;
+  }
+
+  .map-table td[data-label] > .cell-hover,
+  .map-table td[data-label] > .cell-inner {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .map-table td[data-label] > .cell-inner {
+    padding: 0 14px;
+  }
+
+  .map-table .cell-hover .cell-swap {
+    height: 100%;
+  }
+}
+
+/* ---------- Phones: the players table becomes one card per player ---------- */
+
+@media (max-width: 720px) {
+  .roster .section-block {
+    padding: 12px 10px 4px;
+  }
+
+  .roster-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .roster-table thead {
+    display: none;
+  }
+
+  .roster-table tbody {
+    display: block;
+    padding: 4px 10px 10px;
+  }
+
+  /* one card: name row on top (rank # left, score right), stats grid underneath */
+  .roster-table tbody tr {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1.1fr 1.1fr 1.1fr 1.75fr;
+    margin-top: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(116, 118, 122, 0.3);
+    border-radius: 5px;
+    background: var(--row);
+  }
+
+  .roster-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .roster-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    white-space: normal;
+  }
+
+  .roster-table td.roster-pos {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: 30px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .roster-table td.roster-player {
+    grid-column: 1 / -1;
+    padding: 10px 92px 10px 32px;
+  }
+
+  .roster-table td[data-label='Score'] {
+    position: absolute;
+    top: 9px;
+    right: 12px;
+    text-align: right;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* the stat cells: small label over the value */
+  .roster-table td[data-label]:not([data-label='Score']) {
+    padding: 6px 2px 7px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    border-top: 1px solid rgba(116, 118, 122, 0.2);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .roster-table td[data-label]:not([data-label='Score']) + td[data-label] {
+    box-shadow: inset 1px 0 0 rgba(116, 118, 122, 0.2);
+  }
+
+  .roster-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8b8f93;
+  }
+
+  .roster-table td[data-label='Score']::before {
+    text-align: right;
+  }
+
+  .roster-table td.roster-last {
+    font-size: 12px;
+  }
+
+  .roster-table tr td.empty-row {
+    grid-column: 1 / -1;
+    padding: 18px 12px;
+    text-align: center;
+  }
+}
+
+/* players cards: let long names wrap instead of being cut off, and keep the date on one line */
+@media (max-width: 720px) {
+  .roster-table .standing-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+
+  .roster-table td.roster-last {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .roster-table td.roster-player {
+    padding-right: 76px;
+  }
+
+  .roster-table td[data-label='Score'] {
+    font-size: 17px;
+    right: 10px;
+  }
+
+  .roster-table .standing-rank {
+    white-space: normal;
+  }
+}
+
+/* smallest phones: the six stats sit in two rows of three so nothing is squeezed */
+@media (max-width: 350px) {
+  .roster-table tbody tr {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .roster-table td.roster-last {
+    font-size: 12px;
+  }
+
+  .roster .section-block {
+    padding: 10px 6px 4px;
+  }
+
+  .roster-table tbody {
+    padding: 4px 6px 8px;
+  }
+
+  .roster-table td.roster-player {
+    padding: 10px 68px 10px 28px;
+  }
+
+  .roster-table td.roster-pos {
+    width: 26px;
+  }
+
+  .roster-name {
+    gap: 8px;
+  }
+
+  .roster-name .rank-badge {
+    width: 24px;
+    height: 24px;
+  }
+
+  .roster-table td[data-label='Score'] {
+    font-size: 15px;
+    right: 8px;
+  }
+
+  /* first cell of the second row: no divider on the card's left edge */
+  .roster-table td[data-label]:nth-child(7) {
+    box-shadow: none !important; /* beats the divider rule above, which is more specific */
+  }
+}
+
+/* ---------- Phones: the rank table becomes one card per rank ---------- */
+
+@media (max-width: 720px) {
+  .ranks .section-block {
+    padding: 10px 10px 4px;
+  }
+
+  .rank-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .rank-table thead {
+    display: none;
+  }
+
+  .rank-table tbody {
+    display: block;
+    padding-bottom: 8px;
+  }
+
+  /* top row: badge + name on the left, score needed on the right; then two labelled rows */
+  .rank-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(116, 118, 122, 0.3);
+    border-radius: 5px;
+    background: var(--row);
+  }
+
+  .rank-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .rank-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .rank-table td:first-child {
+    padding: 10px 6px 10px 12px;
+  }
+
+  .rank-cell {
+    min-width: 0;
+  }
+
+  .rank-table td.rank-score {
+    align-self: center;
+    padding: 10px 14px 10px 6px;
+    font-size: 20px;
+    text-align: right;
+  }
+
+  .rank-table td.rank-score::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-display);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8b8f93;
+  }
+
+  .rank-table td.rank-req,
+  .rank-table td.rank-holders {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(116, 118, 122, 0.2);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .rank-table td.rank-req::before,
+  .rank-table td.rank-holders::before {
+    content: attr(data-label);
+    flex: 0 0 84px;
+    font-family: var(--font-display);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8b8f93;
+  }
+
+  .rank-table td.rank-req > *,
+  .rank-table td.rank-holders > * {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .rank-holders {
+    min-width: 0;
+  }
+
+  /* long badge names wrap inside the card instead of running off its edge */
+  .rank-table .req-chip,
+  .rank-table .holder-chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .rank-table .req-line {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .rank-table .req-label {
+    min-width: 0;
+  }
+
+  /* the rank you came from (?rank=N) is highlighted on the card */
+  .rank-table tbody tr.rank-row-active {
+    border-color: rgba(143, 22, 32, 0.6);
+    background: rgba(143, 22, 32, 0.1);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+
+  .rank-table tbody tr.rank-row-active td,
+  .rank-table tbody tr.rank-row-active td:first-child {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 350px) {
+  .rank-table td.rank-score {
+    font-size: 16px;
+    padding-right: 10px;
+  }
+
+  .rank-table td:first-child {
+    padding-left: 10px;
+  }
+
+  .rank-cell {
+    gap: 8px;
+  }
+
+  .rank-cell .rank-badge {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rank-cell-name {
+    font-size: 14.5px;
+  }
+}
+
+/* ---------- Phones: Kit / Vehicle / Weapon / Army share one row of equal blocks ---------- */
+
+@media (max-width: 720px) {
+  .profile-favs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .fav-chip {
+    min-width: 0;
+    align-items: center;
+    padding: 6px 3px 7px;
+    text-align: center;
+  }
+
+  .fav-label {
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+  }
+
+  /* long names such as "Light Machine Gun" wrap inside their block rather than pushing it wider */
+  .fav-value {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 350px) {
+  .profile-favs {
+    gap: 4px;
+  }
+
+  .fav-chip {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .fav-value {
+    font-size: 11px;
+    overflow-wrap: break-word;
+  }
+}
+
 }

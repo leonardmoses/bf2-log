@@ -54,8 +54,8 @@ export default function PlayersRoster({ players, awardCounts }) {
                   const rank = rankForPlayer(player);
                   return (
                     <tr key={player.id}>
-                      <td className="num">{sorted.indexOf(player) + 1}</td>
-                      <td>
+                      <td className="num roster-pos">{sorted.indexOf(player) + 1}</td>
+                      <td className="roster-player">
                         <Link className="roster-name" href={playerHref(player)}>
                           <RankBadge rank={rank} size={28} />
                           <span className="roster-who">
@@ -67,13 +67,13 @@ export default function PlayersRoster({ players, awardCounts }) {
                           </span>
                         </Link>
                       </td>
-                      <td className="num">{formatNumber(player.score)}</td>
-                      <td className="num">{ratio(player.kills, player.deaths)}</td>
-                      <td className="num">{ratio(player.wins, player.losses)}</td>
-                      <td className="num">{formatNumber(player.rounds)}</td>
-                      <td className="num">{formatHours(player.play_seconds)}</td>
-                      <td className="num">{awardCounts[player.id] ?? 0}</td>
-                      <td>{formatDate(player.last_online)}</td>
+                      <td className="num" data-label="Score">{formatNumber(player.score)}</td>
+                      <td className="num" data-label="K/D">{ratio(player.kills, player.deaths)}</td>
+                      <td className="num" data-label="W/L">{ratio(player.wins, player.losses)}</td>
+                      <td className="num" data-label="Rounds">{formatNumber(player.rounds)}</td>
+                      <td className="num" data-label="Hours">{formatHours(player.play_seconds)}</td>
+                      <td className="num" data-label="Awards">{awardCounts[player.id] ?? 0}</td>
+                      <td className="roster-last" data-label="Last battle">{formatDate(player.last_online)}</td>
                     </tr>
                   );
                 })}
