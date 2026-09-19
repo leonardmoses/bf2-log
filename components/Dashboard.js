@@ -72,24 +72,31 @@ function SizeCell({ summary, available, showDates }) {
     );
   }
 
-  const meta = [
-    summary.avgDifficulty != null ? `diff ${summary.avgDifficulty.toFixed(1)}` : null,
-    summary.botsShown != null ? `bots ${summary.botsShown}` : null,
-  ]
-    .filter(Boolean)
-    .join('  ·  ');
-
   return (
-    <td>
+    <td className="cell-played">
       <CellHover tip={<BotsTip summary={summary} />}>
       <div className="cell-swap" data-view={showDates ? 'dates' : 'results'}>
         <div className="cell-inner cell-view cell-view-results" aria-hidden={showDates}>
-          <span className="wl-chip">
-            <span className={summary.wins > 0 ? 'wl-win' : 'wl-zero'}>{summary.wins}W</span>
-            <span className="wl-sep"> / </span>
-            <span className={summary.losses > 0 ? 'wl-loss' : 'wl-zero'}>{summary.losses}L</span>
-          </span>
-          {meta && <span className="cell-meta">{meta}</span>}
+          <div className="stat-strip">
+            <span className="stat-seg">
+              <span className="stat-label">Record</span>
+              <span className="stat-value">
+                <span className={summary.wins > 0 ? 'wl-win' : 'wl-zero'}>{summary.wins}W</span>
+                <span className="wl-sep"> / </span>
+                <span className={summary.losses > 0 ? 'wl-loss' : 'wl-zero'}>{summary.losses}L</span>
+              </span>
+            </span>
+            <span className="stat-seg">
+              <span className="stat-label">Diff</span>
+              <span className="stat-value">
+                {summary.avgDifficulty != null ? summary.avgDifficulty.toFixed(1) : '\u2014'}
+              </span>
+            </span>
+            <span className="stat-seg">
+              <span className="stat-label">Bots</span>
+              <span className="stat-value">{summary.botsShown ?? '\u2014'}</span>
+            </span>
+          </div>
         </div>
         <div className="cell-inner cell-view cell-view-dates" aria-hidden={!showDates}>
           <span className="cell-meta">
