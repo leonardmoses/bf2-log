@@ -48,7 +48,11 @@ function InfoBox({ title, note, children }) {
   );
 }
 
-function DataTable({ title, columns, rows }) {
+// Column totals for a table. Ratio columns (K/D, W/L, accuracy) and "best" columns aren't
+// sums, so they are left blank.
+const sum = (list, index) => list.reduce((total, row) => total + (Number(row[index]) || 0), 0);
+
+function DataTable({ title, columns, rows, totals }) {
   return (
     <div className="profile-table">
       <h2 className="profile-table-title">{title}</h2>
@@ -74,6 +78,17 @@ function DataTable({ title, columns, rows }) {
               </tr>
             ))}
           </tbody>
+          {totals && (
+            <tfoot>
+              <tr>
+                {totals.map((cell, i) => (
+                  <td key={i} className={i === 0 ? 'map-name' : 'num'}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>
@@ -292,6 +307,10 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
               rows={stats.kits.map((k, i) => [
                 kitName(i), formatDuration(k[0]), formatNumber(k[1]), formatNumber(k[2]), ratio(k[1], k[2]),
               ])}
+              totals={[
+                'Total', formatDuration(sum(stats.kits, 0)), formatNumber(sum(stats.kits, 1)),
+                formatNumber(sum(stats.kits, 2)), '',
+              ]}
             />
             <DataTable
               title="Vehicles"
@@ -300,6 +319,10 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
                 vehicleName(i), formatDuration(v[0]), formatNumber(v[1]), formatNumber(v[3]),
                 formatNumber(v[2]), ratio(v[1], v[2]),
               ])}
+              totals={[
+                'Total', formatDuration(sum(stats.vehicles, 0)), formatNumber(sum(stats.vehicles, 1)),
+                formatNumber(sum(stats.vehicles, 3)), formatNumber(sum(stats.vehicles, 2)), '',
+              ]}
             />
             <DataTable
               title="Weapons"
@@ -308,6 +331,10 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
                 weaponName(i), formatDuration(w[0]), formatNumber(w[1]), formatNumber(w[2]),
                 ratio(w[1], w[2]), w[3] > 0 ? `${((w[4] / w[3]) * 100).toFixed(2)}%` : '—',
               ])}
+              totals={[
+                'Total', formatDuration(sum(stats.weapons, 0)), formatNumber(sum(stats.weapons, 1)),
+                formatNumber(sum(stats.weapons, 2)), '', '',
+              ]}
             />
             {stats.armies.length > 0 && (
               <DataTable
@@ -317,6 +344,10 @@ export default function ProfileView({ player, catalog, earned, awardsMissing }) 
                   armyName(a[0]), formatDuration(a[1]), formatNumber(a[2]), formatNumber(a[3]),
                   ratio(a[2], a[3]), formatNumber(a[5]),
                 ])}
+                totals={[
+                  'Total', formatDuration(sum(stats.armies, 1)), formatNumber(sum(stats.armies, 2)),
+                  formatNumber(sum(stats.armies, 3)), '', '',
+                ]}
               />
             )}
           </div>

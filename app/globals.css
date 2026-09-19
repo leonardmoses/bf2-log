@@ -2436,3 +2436,12 @@ a.standing-name:hover {
 .th-reset:focus-visible {
   color: #fff;
 }
+
+/* Totals row under each profile table */
+.stats-table tfoot td {
+  font-weight: 700;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.55);
+  border-top: 2px solid rgba(116, 118, 122, 0.4);
+  border-bottom: none;
+}
