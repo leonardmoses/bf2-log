@@ -178,8 +178,7 @@ function Standings({ players, onOpen }) {
   }
 
   return (
-    <div className="glass standings-panel">
-    <div className="section-block">
+    <div className="standings-wrap">
       <div className="standings">
         <button
           type="button"
@@ -250,7 +249,6 @@ function Standings({ players, onOpen }) {
         </>
         )}
       </div>
-    </div>
     </div>
   );
 }

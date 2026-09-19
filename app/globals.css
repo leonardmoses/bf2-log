@@ -526,10 +526,8 @@ h2 {
   padding: 18px 20px 4px;
 }
 
-.standings-panel {
-  border-radius: 6px;
+.standings-wrap {
   margin-top: 20px;
-  padding-bottom: 16px;
 }
 
 .bar-header-toggle {
@@ -2444,4 +2442,10 @@ a.standing-name:hover {
   background: rgba(255, 255, 255, 0.55);
   border-top: 2px solid rgba(116, 118, 122, 0.4);
   border-bottom: none;
+}
+
+/* keyboard focus ring for the standings toggle, in the site's red (mouse clicks show none) */
+.bar-header-toggle:focus-visible {
+  outline: 2px solid rgba(232, 67, 79, 0.9);
+  outline-offset: 2px;
 }
