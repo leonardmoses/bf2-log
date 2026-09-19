@@ -302,12 +302,14 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
   const [sizeFilter, setSizeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showDates, setShowDates] = useState(false);
+  // null = the site's own map order; otherwise sort by name
+  const [mapSort, setMapSort] = useState(null);
   const filtersActive = mapQuery.trim() !== '' || sizeFilter !== 'all' || statusFilter !== 'all';
   const visibleSizes = sizeFilter === 'all' ? MAP_SIZES : [Number(sizeFilter)];
 
   const visibleMaps = useMemo(() => {
     const q = mapQuery.trim().toLowerCase();
-    return maps.filter((map) => {
+    const filtered = maps.filter((map) => {
       if (q && !map.name.toLowerCase().includes(q)) return false;
       const sizes = visibleSizes.filter((size) => mapSupportsSize(map, size));
       if (sizes.length === 0) return false;
@@ -317,7 +319,19 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
       if (statusFilter === 'unplayed') return cells.some((c) => !c || c.count === 0);
       return cells.some((c) => c?.losses > 0); // 'lost'
     });
-  }, [maps, mapQuery, visibleSizes, statusFilter, statsIndex, playerCount]);
+    if (!mapSort) return filtered;
+    const sign = mapSort === 'asc' ? 1 : -1;
+    // stable: maps that share a name keep the site's order
+    return filtered
+      .map((map, index) => ({ map, index }))
+      .sort((a, b) => a.map.name.localeCompare(b.map.name, undefined, { sensitivity: 'base' }) * sign || a.index - b.index)
+      .map((r) => r.map);
+  }, [maps, mapQuery, visibleSizes, statusFilter, statsIndex, playerCount, mapSort]);
+
+  // A to Z, then Z to A, then back to the default order
+  function cycleMapSort() {
+    setMapSort((s) => (s === null ? 'asc' : s === 'asc' ? 'desc' : null));
+  }
 
   function clearFilters() {
     setMapQuery('');
@@ -432,6 +446,7 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
                     Clear
                   </button>
                 )}
+
                 <button
                   type="button"
                   role="switch"
@@ -452,7 +467,25 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
                 <table className="stats-table map-table">
                   <thead>
                     <tr>
-                      <th>Map</th>
+                      <th aria-sort={mapSort === 'asc' ? 'ascending' : mapSort === 'desc' ? 'descending' : 'none'}>
+                        <div className="th-split">
+                          <button
+                            type="button"
+                            className={`sort-button ${mapSort ? 'sort-button-active' : ''}`}
+                            onClick={cycleMapSort}
+                          >
+                            Map
+                            <span className="sort-arrow" aria-hidden="true">
+                              {mapSort === 'asc' ? '\u25B2' : mapSort === 'desc' ? '\u25BC' : '\u21C5'}
+                            </span>
+                          </button>
+                          {mapSort && (
+                            <button className="th-reset" type="button" onClick={() => setMapSort(null)}>
+                              Default order
+                            </button>
+                          )}
+                        </div>
+                      </th>
                       {visibleSizes.map((size) => (
                         <th key={size}>Size {size}</th>
                       ))}

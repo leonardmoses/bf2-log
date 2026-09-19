@@ -2366,3 +2366,66 @@ a.standing-name:hover {
   white-space: nowrap;
   margin-right: 0.9em; /* a wide gap between names instead of commas */
 }
+
+/* ---------- Sortable column headers ---------- */
+
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.sort-button:hover,
+.sort-button-active {
+  color: #fff;
+}
+
+.sort-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.sort-arrow {
+  font-size: 9px;
+  opacity: 0.45;
+}
+
+.sort-button-active .sort-arrow {
+  opacity: 1;
+}
+
+/* Map header: sort button on the left, "Default order" on the right of the same cell */
+.th-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.th-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.th-reset:hover,
+.th-reset:focus-visible {
+  color: #fff;
+}
