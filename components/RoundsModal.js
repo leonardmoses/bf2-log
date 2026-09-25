@@ -3,14 +3,48 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { formatDate } from '@/lib/profile';
+import { formatDate, formatDayOnly } from '@/lib/profile';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+// The same "highest at a win / highest at a loss / most recent" figures as the desktop
+// hover card, but styled for this modal's light panel instead of the dark floating tooltip.
+// On touch there is no hover, so this is the only place those figures are ever visible.
+function BotsSummary({ summary }) {
+  const rows = [
+    ['Highest at a win', summary.topWin, null],
+    ['Highest at a loss', summary.topLoss, null],
+    ['Most recent', summary.latest, summary.latest?.result],
+  ];
+  return (
+    <div className="rounds-summary">
+      {rows.map(([label, entry, result]) => (
+        <div className="rounds-summary-item" key={label}>
+          <div className="rounds-summary-row">
+            <span className="rounds-summary-label">{label}</span>
+            <span className="rounds-summary-value">
+              {entry?.bots != null ? `${entry.bots} bots` : '—'}
+              {result && <span className="rounds-summary-result"> &middot; {result}</span>}
+            </span>
+            <span className="rounds-summary-date">{entry?.bots == null ? '' : formatDayOnly(entry.playedAt)}</span>
+          </div>
+          {entry?.bots != null && (
+            <div className="rounds-summary-players">
+              {entry.players?.length ? entry.players.join(', ') : 'Players not recorded'}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Lists every individual round behind one map-table cell (same map, size and player count),
-// each linking to its own round detail page. All the data is already loaded client-side
-// (it's just the logs for this cell), so unlike ProfileModal there is nothing to fetch.
-export default function RoundsModal({ mapName, size, playerCount, rounds, onClose }) {
+// each linking to its own round detail page, plus the same bots summary the desktop hover
+// card shows (touch devices have no hover, so this is the only way to see it there). All
+// the data is already loaded client-side (it's the logs for this cell), so unlike
+// ProfileModal there is nothing to fetch.
+export default function RoundsModal({ mapName, size, playerCount, rounds, summary, onClose }) {
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -70,6 +104,9 @@ export default function RoundsModal({ mapName, size, playerCount, rounds, onClos
             </span>
           </div>
 
+          {summary && <BotsSummary summary={summary} />}
+
+          <div className="rounds-list-title">Every round</div>
           <div className="rounds-list">
             {rounds.map((round) => (
               <Link key={round.id} href={`/rounds/${round.id}`} className="rounds-list-item" onClick={onClose}>

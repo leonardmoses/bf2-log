@@ -34,6 +34,12 @@ export default function CellHover({ tip, onOpen, children }) {
   function handleClick() {
     if (!onOpen) return;
     hide();
+    // The click leaves this cell focused, which would normally reopen the tooltip on its
+    // own via onFocus. The modal about to open captures "whatever was focused before it"
+    // so it can restore focus there when it closes -- if that's still this cell, closing
+    // the modal silently refocuses it and the tooltip reappears behind the closed modal.
+    // Blurring first means the modal has nothing to restore focus to.
+    anchor.current?.blur();
     onOpen();
   }
 

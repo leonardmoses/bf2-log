@@ -3349,14 +3349,77 @@ a.standing-name:hover {
 /* ---------- Rounds-list modal (opened by clicking a played map-table cell) ---------- */
 
 .rounds-modal-panel {
-  max-width: 480px;
+  max-width: 520px;
+}
+
+/* The same "highest at a win / loss / most recent" figures the desktop hover card shows --
+   touch devices have no hover, so this is how that information reaches a tap instead. */
+.rounds-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 14px 4px;
+}
+
+.rounds-summary-item + .rounds-summary-item {
+  padding-top: 8px;
+  border-top: 1px solid rgba(116, 118, 122, 0.2);
+}
+
+.rounds-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.rounds-summary-label {
+  color: var(--muted);
+}
+
+.rounds-summary-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.rounds-summary-result {
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.rounds-summary-date {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rounds-summary-players {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.rounds-list-title {
+  margin: 4px 14px 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(116, 118, 122, 0.25);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .rounds-list {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  padding: 14px;
+  padding: 8px 14px 14px;
 }
 
 .rounds-list-item {

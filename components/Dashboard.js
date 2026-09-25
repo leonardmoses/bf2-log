@@ -7,7 +7,7 @@ import CellHover from '@/components/CellHover';
 import ProfileModal from '@/components/ProfileModal';
 import RoundsModal from '@/components/RoundsModal';
 import { rankForPlayer } from '@/lib/ranks';
-import { playerHref } from '@/lib/profile';
+import { playerHref, formatDayOnly } from '@/lib/profile';
 import { exportCsv, exportExcel } from '@/lib/exportStats';
 import { PLAYER_COUNTS, MAP_SIZES, buildStatsIndex, mapSupportsSize } from '@/lib/stats';
 
@@ -20,12 +20,6 @@ const shortDay = (iso) => {
   const [y, m, d] = iso.split('-').map(Number);
   const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
   return `${d} ${month} ${String(y).slice(2)}`;
-};
-
-const dayLabel = (iso) => {
-  if (!iso) return 'date unknown';
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 function BotsTip({ summary }) {
@@ -46,7 +40,7 @@ function BotsTip({ summary }) {
               {entry?.bots ?? '\u2014'}
               {result && <em> {result}</em>}
             </strong>
-            <span className="cell-tip-date">{entry?.bots == null ? '' : dayLabel(entry.playedAt)}</span>
+            <span className="cell-tip-date">{entry?.bots == null ? '' : formatDayOnly(entry.playedAt)}</span>
           </div>
           {entry?.bots != null && (
             <div className="cell-tip-players">
@@ -89,7 +83,7 @@ function SizeCell({ summary, available, showDates, size, onOpenRounds }) {
 
   return (
     <td className="cell-played" data-label={`Size ${size}`}>
-      <CellHover tip={<BotsTip summary={summary} />} onOpen={() => onOpenRounds(summary.rounds)}>
+      <CellHover tip={<BotsTip summary={summary} />} onOpen={() => onOpenRounds(summary)}>
       <div className="cell-swap" data-view={showDates ? 'dates' : 'results'}>
         <div className="cell-inner cell-view cell-view-results" aria-hidden={showDates}>
           <div className="stat-strip">
@@ -509,8 +503,8 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
                             summary={statsIndex[map.id]?.[playerCount]?.[size]}
                             showDates={showDates}
                             size={size}
-                            onOpenRounds={(rounds) =>
-                              setRoundsModal({ mapName: map.name, size, playerCount, rounds })
+                            onOpenRounds={(summary) =>
+                              setRoundsModal({ mapName: map.name, size, playerCount, summary })
                             }
                           />
                         ))}
@@ -554,7 +548,8 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
           mapName={roundsModal.mapName}
           size={roundsModal.size}
           playerCount={roundsModal.playerCount}
-          rounds={roundsModal.rounds}
+          rounds={roundsModal.summary.rounds}
+          summary={roundsModal.summary}
           onClose={closeRoundsModal}
         />
       )}
