@@ -636,8 +636,21 @@ def main(data_dir, test_forget_rounds=()):
     ]
     with open(os.path.join(out_dir, "RUN_ORDER.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(summary) + "\n")
+
+    # 0_all.sql: every file above, concatenated in the same order, wrapped in one transaction
+    # so it applies all-or-nothing. Optional -- paste the numbered files one at a time instead
+    # if you'd rather see each step run.
+    combined = ["-- Everything below, combined into one paste. Safe to re-run.", "", "begin;", ""]
+    for name in written:
+        combined.append(f"-- ===== {name} =====")
+        combined.append(open(os.path.join(out_dir, name), encoding="utf-8").read().rstrip("\n"))
+        combined.append("")
+    combined.append("commit;")
+    with open(os.path.join(out_dir, "0_all.sql"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(combined) + "\n")
+
     print("\n".join(summary))
-    print(f"\nFiles are in supabase/imports/{source}/")
+    print(f"\nFiles are in supabase/imports/{source}/ (or paste 0_all.sql to run everything in one go)")
 
 
 if __name__ == "__main__":
