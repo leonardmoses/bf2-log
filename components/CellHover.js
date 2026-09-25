@@ -6,7 +6,9 @@ import { createPortal } from 'react-dom';
 // Wraps a table cell's content and shows `tip` in a small floating card on hover or focus.
 // The card is rendered in <body> and positioned with fixed coordinates so the table's
 // scroll container can't clip it; it flips below when there's no room above.
-export default function CellHover({ tip, children }) {
+// `onOpen`, if given, fires on click (the tooltip hides first, since the modal it opens
+// covers the same area).
+export default function CellHover({ tip, onOpen, children }) {
   const anchor = useRef(null);
   const card = useRef(null);
   const [open, setOpen] = useState(false);
@@ -29,15 +31,32 @@ export default function CellHover({ tip, children }) {
     setPos(null);
   };
 
+  function handleClick() {
+    if (!onOpen) return;
+    hide();
+    onOpen();
+  }
+
+  function handleKeyDown(e) {
+    if (!onOpen) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  }
+
   return (
     <div
       ref={anchor}
-      className="cell-hover"
+      className={`cell-hover ${onOpen ? 'cell-hover-clickable' : ''}`}
       tabIndex={0}
+      role={onOpen ? 'button' : undefined}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
       {children}
       {open &&

@@ -10,8 +10,9 @@ supabase/imports/<dump folder name>/ :
   1_players.sql          player standings (score, wins, kills, ...)            always
   2_new_awards.sql       placeholder catalog rows for award ids we don't know   only if needed
   3_profiles_N.sql       full profile stats + earned awards (split into parts)  always
-  4_rounds.sql           new rounds (dated) + links to sessions you logged      only if needed
+  4_rounds.sql           new rounds, links to sessions you logged, round duration  when rounds exist
   5_session_players.sql  which human players were in each session (needs 016)   when rounds exist
+  6_round_players.sql    per-round results, humans and bots (needs 017)         when rounds exist
   RUN_ORDER.txt          what to run, in order, and every warning
 
 Everything is safe to re-run. Player IP addresses are never read or exported.
@@ -45,7 +46,7 @@ CONTAINER = "bf2stats_import"
 ROOT_PW = "bf2pass"
 CHUNK = 30
 PART_BYTES = 100_000
-USED_TABLES = ["player", "kits", "weapons", "vehicles", "army", "awards", "round_history", "mapinfo", "kills"]
+USED_TABLES = ["player", "player_history", "kits", "weapons", "vehicles", "army", "awards", "round_history", "mapinfo", "kills"]
 MIN_KITS, MIN_VEHICLES = 7, 6  # the standard BF2 kits and vehicle classes; extras appear only when used
 
 
@@ -299,16 +300,19 @@ def plan_rounds(rounds, live_logs, live_maps, forget=()):
     return {"pairs": pairs, "new": new, "unmapped": unmapped, "included": included, **stats}
 
 
-def rounds_sql(plan, source):
+def rounds_sql(plan, source, duration_updates=()):
     lines = [
         f"-- Rounds from the stats dump {source}.",
         "-- * Rounds matching a session you logged by hand get the real date and a link to the",
         "--   stats round; that session keeps its size, bots and difficulty.",
         "-- * The other 3-8 player rounds are inserted new. Size is inferred (see scripts/bf2stats_config.py),",
         "--   difficulty is left blank: fill it in with Edit in admin.",
+        "-- * Round duration is (re)filled in for every round with a log row here, not just new ones,",
+        "--   so it stays correct as the raw dump's duration figure changes or gets backfilled.",
         "-- Safe to re-run (each round is linked by stats_round_id and only ever imported once).",
         "",
         "alter table public.bf2_game_logs add column if not exists stats_round_id bigint unique;",
+        "alter table public.bf2_game_logs add column if not exists duration_seconds integer;",
         "",
     ]
     if plan["pairs"]:
@@ -330,6 +334,18 @@ def rounds_sql(plan, source):
                 f"'{'win' if r['win'] else 'loss'}', null, '{r['local']}', "
                 f"'Imported from stats round #{r['id']} (size assumed)', {r['id']}) "
                 f"on conflict (stats_round_id) do nothing;  -- {r['map']}")
+        lines.append("")
+    if duration_updates:
+        lines.append("-- Round duration (seconds), for every round that has a log row")
+        for start in range(0, len(duration_updates), 500):
+            vals = ",\n".join(f"  ({rid}, {secs})" for rid, secs in duration_updates[start:start + 500])
+            lines.append("\n".join([
+                "update public.bf2_game_logs as l set duration_seconds = v.duration_seconds",
+                "from (values",
+                vals,
+                ") as v(round_id, duration_seconds)",
+                "where l.stats_round_id = v.round_id;",
+            ]))
     return "\n".join(lines) + "\n"
 
 
@@ -419,9 +435,13 @@ def main(data_dir, test_forget_rounds=()):
         # Humans per round. The address column is only used inside this query to tell humans
         # from bots; it is never selected or exported.
         host_ids = ", ".join(str(i) for i in sorted(cfg.HOST_PLAYER_IDS)) or "-1"
-        raw_humans = run_sql(
-            "SELECT h.id, h.timestamp FROM bf2stats.player_history h JOIN bf2stats.player p ON p.id = h.id "
-            f"WHERE p.ip NOT IN ('', '0.0.0.0', '127.0.0.1') OR p.id IN ({host_ids})")
+        # Per-round results for every player (bots included) in bf2stats.player_history: one row
+        # per round they were in, not a running total (verified against career totals). The
+        # address is only used here to flag is_human, never selected or exported.
+        raw_round_players = run_sql(
+            "SELECT h.id, h.timestamp, h.score, h.cmdscore, h.skillscore, h.teamscore, h.kills, h.deaths, "
+            "h.`time`, h.rank, (p.ip NOT IN ('', '0.0.0.0', '127.0.0.1') OR p.id IN "
+            f"({host_ids})) AS is_human FROM bf2stats.player_history h JOIN bf2stats.player p ON p.id = h.id")
         award_rows = run_sql("SELECT id, awd, level, `first`, earned FROM bf2stats.awards ORDER BY id, awd")
         raw_rounds = run_sql(
             "SELECT r.id, r.timestamp, COALESCE(m.name, CONCAT('mapid_', r.mapid)), r.pids1, r.pids2, "
@@ -432,7 +452,7 @@ def main(data_dir, test_forget_rounds=()):
 
     os.makedirs(out_dir, exist_ok=True)
     for name in os.listdir(out_dir):  # replace any earlier run for this dump
-        if re.match(r"[1-5]_.*\.sql$", name) or name == "RUN_ORDER.txt":
+        if re.match(r"[0-6]_.*\.sql$", name) or name == "RUN_ORDER.txt":
             os.remove(os.path.join(out_dir, name))
     written = []
 
@@ -556,8 +576,10 @@ def main(data_dir, test_forget_rounds=()):
         for rid, ts, map_name, p1, p2, t1, t2, dur in raw_rounds:
             local = datetime.datetime.fromtimestamp(int(ts), datetime.timezone.utc).astimezone(tz).date()
             rounds.append({"id": int(rid), "local": local, "map": map_name, "p": int(p1), "bots": int(p2),
-                           "win": int(t1) > int(t2), "end": int(ts) + int(dur)})
+                           "win": int(t1) > int(t2), "end": int(ts) + int(dur), "duration": int(dur)})
         plan = plan_rounds(rounds, live["logs"], live["maps"], forget=set(test_forget_rounds))
+        # every round that ends up with a log row this run: new, paired, or already imported
+        included_ids = set(plan["included"])
         if not live["logs_ready"]:
             warnings.append("The live database has no stats_round_id column yet (4_rounds.sql adds it).")
         live_orders = {m["sort_order"] for m in live["maps"]}
@@ -571,21 +593,22 @@ def main(data_dir, test_forget_rounds=()):
             warnings.append(f"UNMAPPED MAPS (rounds skipped): {listing}. Ask the user which site map each one is "
                             "(add the map in admin first if it is new), then add it to MAP_ORDER in "
                             "scripts/bf2stats_config.py and re-run.")
-        if plan["pairs"] or plan["new"]:
-            write("4_rounds.sql", rounds_sql(plan, source))
+        duration_updates = sorted((r["id"], r["duration"]) for r in rounds if r["id"] in included_ids)
+        if plan["pairs"] or plan["new"] or duration_updates:
+            write("4_rounds.sql", rounds_sql(plan, source, duration_updates))
         round_summary = (f"{len(plan['new'])} new, {len(plan['pairs'])} linked to sessions you logged, "
                          f"{plan['already_imported']} already imported, {plan['outside_range']} outside "
                          f"{cfg.PLAYER_RANGE[0]}-{cfg.PLAYER_RANGE[1]} players, {sum(plan['unmapped'].values())} unmapped")
 
     # ---------------- 5: human players in each session ----------------
     if live:
-        wanted = set(plan["included"])
+        wanted = included_ids
         # Round timestamps are rounded to a coarse grid, so each human's end-of-round record
         # is matched to the nearest round end (within a few minutes) instead of a fixed window.
         ends = sorted((r["end"], r["id"]) for r in rounds)
         pairs_by_round = collections.defaultdict(set)
-        for pid, ts in raw_humans:
-            if pid not in by_id:
+        for pid, ts, *_rest, is_human in raw_round_players:
+            if pid not in by_id or is_human not in ("1", 1, True):
                 continue
             end, rid = min(ends, key=lambda e: abs(e[0] - int(ts)))
             if abs(end - int(ts)) <= 200 and rid in wanted:
@@ -622,6 +645,63 @@ def main(data_dir, test_forget_rounds=()):
                 "",
             ]) + "\n" + "\n\n".join(blocks) + "\n")
         round_summary += f" | session players: {len(flat)} links across {len(pairs_by_round)} rounds"
+
+    # ---------------- 6: per-round results (humans and bots) ----------------
+    if live:
+        # For each player, keep whichever match is closest, in case more than one of their
+        # history rows lands within tolerance of the same round end.
+        round_players = {}
+        for pid, ts, score, cmdscore, skillscore, teamscore, kills, deaths, secs, rank, is_human in raw_round_players:
+            if pid not in by_id:
+                continue
+            end, rid = min(ends, key=lambda e: abs(e[0] - int(ts)))
+            diff = abs(end - int(ts))
+            if diff > 200 or rid not in wanted:
+                continue
+            key = (rid, pid)
+            if key in round_players and round_players[key][0] <= diff:
+                continue
+            round_players[key] = (diff, {
+                "score": to_int(score), "cmd": to_int(cmdscore), "skill": to_int(skillscore),
+                "team": to_int(teamscore), "kills": to_int(kills), "deaths": to_int(deaths),
+                "secs": to_int(secs), "rank": to_int(rank), "human": is_human in ("1", 1, True),
+            })
+        if round_players:
+            rp_rows = sorted(round_players.items())
+            blocks = []
+            for start in range(0, len(rp_rows), 200):
+                vals = []
+                for (rid, pid), (_diff, st) in rp_rows[start:start + 200]:
+                    vals.append(
+                        f"  ({rid}, {pid}, {st['score']}, {st['cmd']}, {st['skill']}, {st['team']}, "
+                        f"{st['kills']}, {st['deaths']}, {st['secs']}, {st['rank']}, {'true' if st['human'] else 'false'})"
+                    )
+                blocks.append("\n".join([
+                    "insert into public.bf2_round_players",
+                    "  (log_id, player_id, score, cmd_score, skill_score, team_score, kills, deaths, play_seconds, "
+                    "rank_at_time, is_human)",
+                    "select l.id, p.id, v.score, v.cmd_score, v.skill_score, v.team_score, v.kills, v.deaths, "
+                    "v.play_seconds, v.rank_at_time, v.is_human",
+                    "from (values",
+                    ",\n".join(vals),
+                    ") as v(round_id, external_id, score, cmd_score, skill_score, team_score, kills, deaths, "
+                    "play_seconds, rank_at_time, is_human)",
+                    "join public.bf2_game_logs l on l.stats_round_id = v.round_id",
+                    "join public.bf2_players p on p.external_id = v.external_id",
+                    "on conflict (log_id, player_id) do update set",
+                    "  score = excluded.score, cmd_score = excluded.cmd_score, skill_score = excluded.skill_score,",
+                    "  team_score = excluded.team_score, kills = excluded.kills, deaths = excluded.deaths,",
+                    "  play_seconds = excluded.play_seconds, rank_at_time = excluded.rank_at_time, "
+                    "is_human = excluded.is_human;",
+                ]))
+            write("6_round_players.sql", "\n".join([
+                f"-- Per-round results (humans and bots) from {source}.",
+                "-- Run after 1_players.sql and 4_rounds.sql, and after supabase/017_round_players.sql.",
+                "-- Safe to re-run.",
+                "",
+            ]) + "\n" + "\n\n".join(blocks) + "\n")
+        round_summary += (f" | round players: {len(round_players)} rows across "
+                          f"{len({k[0] for k in round_players})} rounds")
 
     # ---------------- run order + summary ----------------
     summary = [

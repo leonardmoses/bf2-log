@@ -3333,4 +3333,263 @@ a.standing-name:hover {
   }
 }
 
+/* ---------- Clickable map-table cell (opens the rounds-list modal) ---------- */
+
+.cell-hover-clickable {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .cell-hover-clickable:hover {
+    background: rgba(143, 22, 32, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(143, 22, 32, 0.18);
+  }
+}
+
+/* ---------- Rounds-list modal (opened by clicking a played map-table cell) ---------- */
+
+.rounds-modal-panel {
+  max-width: 480px;
+}
+
+.rounds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px;
+}
+
+.rounds-list-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid rgba(116, 118, 122, 0.25);
+  border-radius: 5px;
+  background: var(--row);
+  color: inherit;
+  text-decoration: none;
+}
+
+.rounds-list-item:hover {
+  background: var(--row-hover);
+  border-color: rgba(143, 22, 32, 0.35);
+  text-decoration: none;
+}
+
+.rounds-list-date {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.rounds-list-meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rounds-list-arrow {
+  color: var(--muted);
+}
+
+@media (max-width: 480px) {
+  .rounds-list-item {
+    grid-template-columns: auto 1fr auto;
+    row-gap: 4px;
+  }
+
+  .rounds-list-meta {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+
+/* ---------- Round detail page ---------- */
+
+.round-notes {
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.round-notes-label {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.round-player-name .roster-name {
+  display: inline-flex;
+}
+
+.round-players-empty {
+  padding: 28px 20px;
+}
+
+.round-bots {
+  margin-top: 16px;
+}
+
+.round-bots summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 0;
+}
+
+.round-bots summary:hover {
+  color: var(--ink-2);
+}
+
+.round-bots[open] summary {
+  margin-bottom: 8px;
+}
+
+/* Phones: one card per player, name/score on top, four labelled figures underneath --
+   the same pattern already used for the session history and players tables. */
+@media (max-width: 720px) {
+  .round-players-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .round-players-table thead {
+    display: none;
+  }
+
+  .round-players-table tbody {
+    display: block;
+  }
+
+  .round-players-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(116, 118, 122, 0.3);
+    border-radius: 5px;
+    background: var(--row);
+  }
+
+  .round-players-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .round-players-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    white-space: normal;
+  }
+
+  .round-players-table td.round-player-name {
+    grid-column: 1 / -1;
+    padding: 10px 14px;
+  }
+
+  .round-players-table td[data-label='Score'] {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .round-players-table tbody tr {
+    position: relative;
+  }
+
+  .round-players-table td[data-label]:not([data-label='Score']):not(.round-player-name) {
+    padding: 6px 2px 7px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    border-top: 1px solid rgba(116, 118, 122, 0.2);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .round-players-table td[data-label]:not([data-label='Score']):not(.round-player-name) + td[data-label] {
+    box-shadow: inset 1px 0 0 rgba(116, 118, 122, 0.2);
+  }
+
+  .round-players-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8b8f93;
+  }
+
+  .round-players-table td[data-label='Score']::before {
+    display: none;
+  }
+}
+
+/* Round page: this round's own 1/2/3 by score (separate from each player's overall
+   military rank badge next to it). Gold / silver / bronze, with a star for the top 3. */
+.round-pos {
+  display: inline-grid;
+  /* the star sits in its own fixed-width column so the number always starts at the same x,
+     whether or not a star is there -- a star widening the box was pushing 1/2/3 out of line
+     with 4 onwards */
+  grid-template-columns: 12px auto;
+  align-items: center;
+  column-gap: 2px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #9a9ea3;
+}
+
+.round-pos-star {
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+}
+
+.round-pos-1 {
+  color: #9c6f0a;
+}
+
+.round-pos-1 .round-pos-star {
+  color: #d4af37;
+}
+
+.round-pos-2 {
+  color: #6b7075;
+}
+
+.round-pos-2 .round-pos-star {
+  color: #aab0b6;
+}
+
+.round-pos-3 {
+  color: #8a5323;
+}
+
+.round-pos-3 .round-pos-star {
+  color: #c17a3f;
+}
+
 }

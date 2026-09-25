@@ -5,6 +5,7 @@ import Link from 'next/link';
 import RankBadge from '@/components/RankBadge';
 import CellHover from '@/components/CellHover';
 import ProfileModal from '@/components/ProfileModal';
+import RoundsModal from '@/components/RoundsModal';
 import { rankForPlayer } from '@/lib/ranks';
 import { playerHref } from '@/lib/profile';
 import { exportCsv, exportExcel } from '@/lib/exportStats';
@@ -65,7 +66,7 @@ function BotsTip({ summary }) {
 }
 
 // `size` becomes the row label when the table turns into cards on phones
-function SizeCell({ summary, available, showDates, size }) {
+function SizeCell({ summary, available, showDates, size, onOpenRounds }) {
   if (!available) {
     return (
       <td data-label={`Size ${size}`}>
@@ -88,7 +89,7 @@ function SizeCell({ summary, available, showDates, size }) {
 
   return (
     <td className="cell-played" data-label={`Size ${size}`}>
-      <CellHover tip={<BotsTip summary={summary} />}>
+      <CellHover tip={<BotsTip summary={summary} />} onOpen={() => onOpenRounds(summary.rounds)}>
       <div className="cell-swap" data-view={showDates ? 'dates' : 'results'}>
         <div className="cell-inner cell-view cell-view-results" aria-hidden={showDates}>
           <div className="stat-strip">
@@ -268,6 +269,8 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
   }
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const closeProfile = useCallback(() => setSelectedPlayer(null), []);
+  const [roundsModal, setRoundsModal] = useState(null);
+  const closeRoundsModal = useCallback(() => setRoundsModal(null), []);
   const statsIndex = useMemo(() => buildStatsIndex(logs), [logs]);
 
   const tabLogs = useMemo(
@@ -506,6 +509,9 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
                             summary={statsIndex[map.id]?.[playerCount]?.[size]}
                             showDates={showDates}
                             size={size}
+                            onOpenRounds={(rounds) =>
+                              setRoundsModal({ mapName: map.name, size, playerCount, rounds })
+                            }
                           />
                         ))}
                       </tr>
@@ -543,6 +549,15 @@ export default function Dashboard({ maps, logs, players, initialPlayerCount }) {
       </main>
 
       {selectedPlayer && <ProfileModal player={selectedPlayer} onClose={closeProfile} />}
+      {roundsModal && (
+        <RoundsModal
+          mapName={roundsModal.mapName}
+          size={roundsModal.size}
+          playerCount={roundsModal.playerCount}
+          rounds={roundsModal.rounds}
+          onClose={closeRoundsModal}
+        />
+      )}
     </>
   );
 }
