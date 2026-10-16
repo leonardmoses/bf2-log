@@ -30,12 +30,15 @@ MAP_ORDER = {
     "dragon_valley": 14,
     "dragon_valley_moon": 15,
     "falklands": 16,
+    "ghost_town": 17,
     "greatwall": 18,
     "gulf_of_oman": 19,
     "karkand_stormfront": 21,
     "mass_destruction": 23,
     "night_flight": 25,  # played as "Day Flight" (same map, daytime effects)
     "processing_plant": 26,
+    "aix_refinery": 26.5,  # alphabetical slot between Processing Plant (26) and Road to Jalalabad (27);
+                           # new to the site (supabase/020_add_refinery.sql), only 1 round in the stats history
     "road_to_jalalabad": 27,
     "sf_midnight_sun": 28,
     "sf_op_harvest": 29,
@@ -50,6 +53,7 @@ MAP_ORDER = {
     "tng_kubra_dam": 42,
     "tng_sands_of_sinai": 46,
     "tng_street": 47,
+    "tng_the_dam_flood": 48,
     "tng_the_push_day": 49,
     "tng_town_strike": 50,
     "urban_decay": 56,

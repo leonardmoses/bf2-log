@@ -2,6 +2,12 @@
 """Turn a BF2Statistics MySQL dump (.frm/.MYD/.MYI files) into Supabase SQL.
 
 Usage:  python3 scripts/bf2stats_to_sql.py data/bf2stats_2026_9-18
+        python3 scripts/bf2stats_to_sql.py data/bf2stats_2026_10-16 --prereq supabase/020_add_refinery.sql
+
+--prereq PATH (repeatable): a new top-level migration this week's rounds depend on (e.g. a
+brand-new map that needed its own supabase/0NN_*.sql) that the user may not have run yet.
+Folded into 0_all.sql ahead of everything else, so that one paste stays genuinely
+self-sufficient instead of needing "run this migration first, then 0_all.sql".
 
 Loads a copy of the files into a throwaway MariaDB container (Docker required), so the
 originals are never modified, and writes ready-to-run SQL into
@@ -379,7 +385,7 @@ def check_schema(warnings):
 
 # ----------------------------------------------------------------------------- main
 
-def main(data_dir, test_forget_rounds=()):
+def main(data_dir, test_forget_rounds=(), prereqs=()):
     if not os.path.isdir(data_dir):
         sys.exit(f"Not a folder: {data_dir}")
     source = os.path.basename(os.path.normpath(data_dir))
@@ -719,8 +725,15 @@ def main(data_dir, test_forget_rounds=()):
 
     # 0_all.sql: every file above, concatenated in the same order, wrapped in one transaction
     # so it applies all-or-nothing. Optional -- paste the numbered files one at a time instead
-    # if you'd rather see each step run.
+    # if you'd rather see each step run. Any --prereq (a new top-level migration this week's
+    # rounds depend on, e.g. a brand-new map) is folded in first, so this one paste is always
+    # everything needed -- no separate "run this migration first" step to remember.
     combined = ["-- Everything below, combined into one paste. Safe to re-run.", "", "begin;", ""]
+    for prereq in prereqs:
+        prereq_path = prereq if os.path.isabs(prereq) else os.path.join(ROOT, prereq)
+        combined.append(f"-- ===== {os.path.relpath(prereq_path, ROOT)} (run first: a new map/migration this week's rounds need) =====")
+        combined.append(open(prereq_path, encoding="utf-8").read().rstrip("\n"))
+        combined.append("")
     for name in written:
         combined.append(f"-- ===== {name} =====")
         combined.append(open(os.path.join(out_dir, name), encoding="utf-8").read().rstrip("\n"))
@@ -730,6 +743,8 @@ def main(data_dir, test_forget_rounds=()):
         fh.write("\n".join(combined) + "\n")
 
     print("\n".join(summary))
+    if prereqs:
+        print("\n0_all.sql now also includes: " + ", ".join(prereqs))
     print(f"\nFiles are in supabase/imports/{source}/ (or paste 0_all.sql to run everything in one go)")
 
 
@@ -740,6 +755,11 @@ if __name__ == "__main__":
         i = args.index("--test-forget-rounds")
         forget = tuple(int(x) for x in args[i + 1].split(","))
         del args[i:i + 2]
+    prereqs = []
+    while "--prereq" in args:  # a new top-level migration (e.g. supabase/020_add_refinery.sql)
+        i = args.index("--prereq")  # this week's rounds depend on; folded into 0_all.sql
+        prereqs.append(args[i + 1])
+        del args[i:i + 2]
     if len(args) != 1:
         sys.exit(__doc__)
-    main(args[0], forget)
+    main(args[0], forget, tuple(prereqs))

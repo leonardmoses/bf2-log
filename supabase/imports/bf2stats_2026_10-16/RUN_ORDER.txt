@@ -1,0 +1,15 @@
+Stats import from bf2stats_2026_10-16
+  players: 152 | profiles: 152 | earned awards: 565 | rounds: 4 new, 0 linked to sessions you logged, 98 already imported, 21 outside 3-8 players, 0 unmapped | session players: 471 links across 102 rounds | round players: 4961 rows across 102 rounds
+
+Run these in the Supabase SQL editor, in this order (safe to re-run):
+  1. 1_players.sql
+  2. 3_profiles_1.sql
+  3. 3_profiles_2.sql
+  4. 3_profiles_3.sql
+  5. 4_rounds.sql
+  6. 5_session_players.sql
+  7. 6_round_players.sql
+
+Warnings:
+  - MAPS NOT IN THE LIVE DATABASE YET (sort_order 26.5: aix_refinery). Run the SQL that adds them BEFORE 4_rounds.sql.
+  - Human count differs from the stats database's own count (players who joined late or left early can do this): #28 (6 found, 7 recorded).
