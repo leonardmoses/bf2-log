@@ -9,7 +9,8 @@ brand-new map that needed its own supabase/0NN_*.sql) that the user may not have
 Folded into 0_all.sql ahead of everything else, so that one paste stays genuinely
 self-sufficient instead of needing "run this migration first, then 0_all.sql".
 
-Loads a copy of the files into a throwaway MariaDB container (Docker required), so the
+Loads a copy of the files into a throwaway MariaDB container (Docker), or, where Docker
+isn't installed, a throwaway portable local MariaDB (see scripts/local_db.py), so the
 originals are never modified, and writes ready-to-run SQL into
 supabase/imports/<dump folder name>/ :
 
@@ -27,6 +28,7 @@ using NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY from .env.local.
 Settings (map names, size rules, timezone) live in scripts/bf2stats_config.py.
 """
 import collections
+import contextlib
 import datetime
 import json
 import os
@@ -42,6 +44,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(__file__))
 import bf2stats_config as cfg  # noqa: E402
+import local_db  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 IMPORTS_DIR = os.path.join(ROOT, "supabase", "imports")
@@ -62,9 +65,11 @@ def sh(*args, check=True, **kw):
     return subprocess.run(args, check=check, capture_output=True, text=True, **kw)
 
 
+MARIADB = ["docker", "exec", CONTAINER, "mariadb", "-uroot", f"-p{ROOT_PW}"]  # swapped for a local client without Docker
+
+
 def run_sql(sql, header=False):
-    cmd = ["docker", "exec", CONTAINER, "mariadb", "-uroot", f"-p{ROOT_PW}",
-           "--default-character-set=utf8mb4", "--batch", "--raw"]
+    cmd = MARIADB + ["--default-character-set=utf8mb4", "--batch", "--raw"]
     if not header:
         cmd.append("-N")
     cmd += ["-e", sql]
@@ -385,6 +390,46 @@ def check_schema(warnings):
 
 # ----------------------------------------------------------------------------- main
 
+@contextlib.contextmanager
+def docker_mariadb():
+    sh("docker", "rm", "-f", CONTAINER, check=False)
+    sh("docker", "run", "-d", "--name", CONTAINER, "-e", f"MARIADB_ROOT_PASSWORD={ROOT_PW}", "mariadb:10.11")
+    try:
+        for _ in range(60):
+            if sh(*MARIADB, "-e", "select 1", check=False).returncode == 0:
+                break
+            time.sleep(2)
+        else:
+            sys.exit("MariaDB did not start in time. Is Docker running? (open -a Docker)")
+        yield
+    finally:
+        sh("docker", "rm", "-f", CONTAINER, check=False)
+
+
+@contextlib.contextmanager
+def stats_db(data_dir):
+    """A throwaway MariaDB holding a copy of the dump as database bf2stats."""
+    global MARIADB
+    if local_db.use_docker():
+        with docker_mariadb():
+            run_sql("CREATE DATABASE bf2stats DEFAULT CHARACTER SET latin1")
+            with tempfile.TemporaryDirectory() as tmp:
+                for name in os.listdir(data_dir):
+                    shutil.copy(os.path.join(data_dir, name), tmp)
+                sh("docker", "cp", tmp + "/.", f"{CONTAINER}:/var/lib/mysql/bf2stats/")
+            sh("docker", "exec", "-u", "root", CONTAINER, "chown", "-R", "mysql:mysql", "/var/lib/mysql/bf2stats")
+            run_sql("FLUSH TABLES")
+            yield
+        return
+    with local_db.mariadb(ROOT_PW) as (client, datadir):
+        MARIADB = client
+        run_sql("CREATE DATABASE bf2stats DEFAULT CHARACTER SET latin1")
+        for name in os.listdir(data_dir):
+            shutil.copy(os.path.join(data_dir, name), os.path.join(datadir, "bf2stats"))
+        run_sql("FLUSH TABLES")
+        yield
+
+
 def main(data_dir, test_forget_rounds=(), prereqs=()):
     if not os.path.isdir(data_dir):
         sys.exit(f"Not a folder: {data_dir}")
@@ -392,24 +437,7 @@ def main(data_dir, test_forget_rounds=(), prereqs=()):
     out_dir = os.path.join(IMPORTS_DIR, source)
     warnings = []
 
-    sh("docker", "rm", "-f", CONTAINER, check=False)
-    sh("docker", "run", "-d", "--name", CONTAINER, "-e", f"MARIADB_ROOT_PASSWORD={ROOT_PW}", "mariadb:10.11")
-    try:
-        for _ in range(60):
-            if sh("docker", "exec", CONTAINER, "mariadb", "-uroot", f"-p{ROOT_PW}", "-e", "select 1",
-                  check=False).returncode == 0:
-                break
-            time.sleep(2)
-        else:
-            sys.exit("MariaDB did not start in time. Is Docker running? (open -a Docker)")
-
-        run_sql("CREATE DATABASE bf2stats DEFAULT CHARACTER SET latin1")
-        with tempfile.TemporaryDirectory() as tmp:
-            for name in os.listdir(data_dir):
-                shutil.copy(os.path.join(data_dir, name), tmp)
-            sh("docker", "cp", tmp + "/.", f"{CONTAINER}:/var/lib/mysql/bf2stats/")
-        sh("docker", "exec", "-u", "root", CONTAINER, "chown", "-R", "mysql:mysql", "/var/lib/mysql/bf2stats")
-        run_sql("FLUSH TABLES")
+    with stats_db(data_dir):
 
         check_schema(warnings)
 
@@ -453,8 +481,6 @@ def main(data_dir, test_forget_rounds=(), prereqs=()):
             "SELECT r.id, r.timestamp, COALESCE(m.name, CONCAT('mapid_', r.mapid)), r.pids1, r.pids2, "
             "r.tickets1, r.tickets2, r.time FROM bf2stats.round_history r LEFT JOIN bf2stats.mapinfo m ON m.id = r.mapid "
             "ORDER BY r.timestamp")
-    finally:
-        sh("docker", "rm", "-f", CONTAINER, check=False)
 
     os.makedirs(out_dir, exist_ok=True)
     for name in os.listdir(out_dir):  # replace any earlier run for this dump
@@ -463,7 +489,7 @@ def main(data_dir, test_forget_rounds=(), prereqs=()):
     written = []
 
     def write(name, text):
-        with open(os.path.join(out_dir, name), "w", encoding="utf-8") as fh:
+        with open(os.path.join(out_dir, name), "w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
         written.append(name)
 
@@ -720,7 +746,7 @@ def main(data_dir, test_forget_rounds=(), prereqs=()):
         "Warnings:" if warnings else "No warnings.",
         *[f"  - {w}" for w in warnings],
     ]
-    with open(os.path.join(out_dir, "RUN_ORDER.txt"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(out_dir, "RUN_ORDER.txt"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(summary) + "\n")
 
     # 0_all.sql: every file above, concatenated in the same order, wrapped in one transaction
@@ -739,7 +765,7 @@ def main(data_dir, test_forget_rounds=(), prereqs=()):
         combined.append(open(os.path.join(out_dir, name), encoding="utf-8").read().rstrip("\n"))
         combined.append("")
     combined.append("commit;")
-    with open(os.path.join(out_dir, "0_all.sql"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(out_dir, "0_all.sql"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(combined) + "\n")
 
     print("\n".join(summary))

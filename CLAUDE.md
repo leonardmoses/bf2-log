@@ -5,11 +5,13 @@
 
 Weekly Battlefield 2 co-op night tracker. Next.js (JavaScript, App Router, no Tailwind) + Supabase; deployed on Vercel from `main`. Public reads, single admin writes.
 
+Most imported "players" are actually AIX2 bots, not people -- this is intentional and decided: the user wants bots included in standings, the players page and search, same as humans. Don't filter them out or re-raise this.
+
 ## Processing a new stats dump ("process it")
 
 The user drops a dated BF2Statistics folder (`.frm/.MYD/.MYI`) in `data/`, e.g. `data/bf2stats_2026_9-18`. `data/` and `design/` are gitignored, local only. Never export player IP addresses.
 
-1. Docker Desktop must be running (`open -a Docker` and wait). The script uses a throwaway MariaDB container and removes it.
+1. Docker Desktop must be running (`open -a Docker` and wait). The script uses a throwaway MariaDB container and removes it. On the Windows PC (no Docker), both scripts instead start throwaway portable MariaDB 10.11 / Postgres 16 servers from `%LOCALAPPDATA%\bf2-log-tools\x` (see `scripts/local_db.py`; needs `pip install tzdata` once, and `python` instead of `python3`). Verified to produce output identical to the Mac's Docker run.
 2. `python3 scripts/bf2stats_to_sql.py data/<folder>` writes `supabase/imports/<folder>/`: `1_players.sql`, `2_new_awards.sql` (only if the dump has award ids missing from the catalog), `3_profiles_N.sql`, `4_rounds.sql` (new/paired rounds, plus round duration -- written whenever any round has a log row, needs `supabase/019_round_duration.sql`), `5_session_players.sql` (the human players in each session, needs `supabase/016_session_players.sql`), `6_round_players.sql` (per-round score/kills/deaths/time for every player, humans and bots, needs `supabase/017_round_players.sql`; powers the round detail page at `/rounds/[id]`), `0_all.sql` (every numbered file above concatenated, wrapped in one transaction -- optional, for pasting everything in one go instead of one file at a time), and `RUN_ORDER.txt`. It reads the live maps, sessions and award catalog through the public REST API (`.env.local` anon key). Steps 4-6 backfill every round that has a log row, not just new ones this run, so a dump's full history (as far back as the dump retains `player_history`) can be filled in during a single pass.
 3. `python3 scripts/validate_imports.py supabase/imports/<folder>` runs the files twice in a throwaway Postgres 16 container. Do this before handing SQL over.
 4. Read the script's warnings and act on them:

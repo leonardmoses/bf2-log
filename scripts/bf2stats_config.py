@@ -35,6 +35,7 @@ MAP_ORDER = {
     "gulf_of_oman": 19,
     "karkand_stormfront": 21,
     "mass_destruction": 23,
+    "morning_breeze": 24,
     "night_flight": 25,  # played as "Day Flight" (same map, daytime effects)
     "processing_plant": 26,
     "aix_refinery": 26.5,  # alphabetical slot between Processing Plant (26) and Road to Jalalabad (27);

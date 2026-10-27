@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Check generated import SQL against a throwaway Postgres (Docker), the way Supabase will run it.
+"""Check generated import SQL against a throwaway Postgres (Docker, or a portable local one where
+Docker isn't installed -- see scripts/local_db.py), the way Supabase will run it.
 
 Usage: python3 scripts/validate_imports.py supabase/imports/bf2stats_2026_9-18
 
@@ -8,11 +9,15 @@ then runs the folder's 1_ to 6_ files TWICE (imports must be safe to re-run) and
 prints row counts. 0_all.sql (the same files combined) is skipped here, since it would
 just repeat everything the numbered files already cover. Any SQL error stops the run.
 """
+import contextlib
 import glob
 import os
 import subprocess
 import sys
 import time
+
+sys.path.insert(0, os.path.dirname(__file__))
+import local_db  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 NAME = "bf2_validate_pg"
@@ -22,19 +27,20 @@ def sh(*a, check=True, **kw):
     return subprocess.run(a, check=check, capture_output=True, text=True, **kw)
 
 
+PSQL = ["docker", "exec", "-i", NAME, "psql", "-U", "postgres"]  # swapped for a local psql without Docker
+
+
 def psql(sql=None, path=None):
-    cmd = ["docker", "exec", "-i", NAME, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"]
+    cmd = PSQL + ["-v", "ON_ERROR_STOP=1", "-qAt"]
     if sql is not None:
         cmd += ["-c", sql]
         return sh(*cmd)
     with open(path, encoding="utf-8") as fh:
-        return subprocess.run(cmd, stdin=fh, capture_output=True, text=True)
+        return subprocess.run(cmd, stdin=fh, capture_output=True, text=True, encoding="utf-8")
 
 
-def main(folder):
-    files = sorted(f for f in glob.glob(os.path.join(folder, "*.sql")) if os.path.basename(f)[0] in "123456")
-    if not files:
-        sys.exit("No 1_ to 6_ .sql files in that folder.")
+@contextlib.contextmanager
+def docker_postgres():
     sh("docker", "rm", "-f", NAME, check=False)
     sh("docker", "run", "-d", "--name", NAME, "-e", "POSTGRES_PASSWORD=x", "postgres:16")
     try:
@@ -43,6 +49,28 @@ def main(folder):
                 time.sleep(2)
                 break
             time.sleep(1)
+        yield
+    finally:
+        sh("docker", "rm", "-f", NAME, check=False)
+
+
+@contextlib.contextmanager
+def throwaway_postgres():
+    global PSQL
+    if local_db.use_docker():
+        with docker_postgres():
+            yield
+        return
+    with local_db.postgres() as client:
+        PSQL = client
+        yield
+
+
+def main(folder):
+    files = sorted(f for f in glob.glob(os.path.join(folder, "*.sql")) if os.path.basename(f)[0] in "123456")
+    if not files:
+        sys.exit("No 1_ to 6_ .sql files in that folder.")
+    with throwaway_postgres():
         # stand-ins for Supabase's roles/schema so the policies in schema.sql can be created
         psql("create role anon; create role authenticated; create schema if not exists auth;"
              "create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text, email_confirmed_at timestamptz);"
@@ -71,8 +99,6 @@ def main(folder):
             print(f"run {attempt}: players | with profile | earned awards | catalog | logs | session players | "
                   f"round players = {counts}")
         print("OK: every file ran twice without errors")
-    finally:
-        sh("docker", "rm", "-f", NAME, check=False)
 
 
 if __name__ == "__main__":
